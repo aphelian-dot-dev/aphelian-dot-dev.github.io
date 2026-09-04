@@ -1,6 +1,18 @@
-# APHELION — The Last Orrery
+# APHELIAN — The Last Orrery
 
 Source for [aphelian.dev](https://aphelian.dev/), a single-page canvas action game hosted with GitHub Pages.
+
+## Gameplay
+
+Command three Ward Moons, break the approaching Voidcraft, and survive the three movements until the Black Sun appears. The final fight has no time limit: the rite continues until you seal the Black Sun or your Vital Light is extinguished. Your total elapsed time is recorded, including whether you complete the rite in under two minutes.
+
+## Controls
+
+- **Move:** WASD, arrow keys, or drag on the left side of a touch screen.
+- **Aim:** Pointer or a right-side touch.
+- **Strike:** Hold and release Space, left click, or a right-side touch.
+- **Retrograde:** Right click, Shift, or tap the left side of a touch screen.
+- **Pause / sound:** P or Escape pauses; M toggles sound.
 
 ## Local preview
 

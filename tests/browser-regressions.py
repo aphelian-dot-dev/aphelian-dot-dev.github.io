@@ -139,6 +139,63 @@ class ResultScreenBrowserTests(unittest.TestCase):
             self.assertEqual("playing", state["snapshot"]["mode"], json.dumps(state, indent=2))
             self.assertGreater(state["snapshot"]["time"], .5, json.dumps(state, indent=2))
 
+    def test_boss_fight_continues_past_two_minutes_and_late_win_keeps_elapsed_time(self):
+        wrapper = (
+            "<!doctype html><style>html,body{margin:0}iframe{display:block;border:0}</style>"
+            f'<iframe id="gameFrame" width="900" height="700" '
+            f'src="{self.base_url}/index.html?debug=1"></iframe>'
+        )
+        self.driver.get("data:text/html;charset=utf-8," + quote(wrapper))
+        frame = self.driver.find_element("id", "gameFrame")
+        self.driver.switch_to.frame(frame)
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script(
+                'return document.readyState === "complete" && typeof window.__ORRERY__ === "object"'
+            )
+        )
+        checkpoint = self.driver.execute_script(
+            """
+            window.__ORRERY__.start();
+            window.__ORRERY__.forceBoss();
+            const advanced = window.__ORRERY__.setElapsedTime(121);
+            return { advanced, snapshot: window.__ORRERY__.snapshot() };
+            """
+        )
+        self.assertTrue(checkpoint["advanced"], json.dumps(checkpoint, indent=2))
+        WebDriverWait(self.driver, 5).until(
+            lambda driver: driver.execute_script(
+                'const snapshot = window.__ORRERY__.snapshot(); '
+                'return snapshot.mode === "playing" && snapshot.time > 121.25;'
+            )
+        )
+        active = self.driver.execute_script("return window.__ORRERY__.snapshot()")
+        self.assertEqual("playing", active["mode"], json.dumps(active, indent=2))
+        self.assertGreater(active["time"], 121.25, json.dumps(active, indent=2))
+        self.assertEqual(checkpoint["snapshot"]["score"], active["score"], json.dumps(active, indent=2))
+        self.assertIsNotNone(active["boss"], json.dumps(active, indent=2))
+
+        self.driver.execute_script("window.__ORRERY__.defeatBoss()")
+        WebDriverWait(self.driver, 5).until(
+            lambda driver: driver.execute_script('return window.__ORRERY__.snapshot().mode === "won"')
+        )
+        result = self.driver.execute_script(
+            """
+            const snapshot = window.__ORRERY__.snapshot();
+            return {
+              snapshot,
+              resultTime: document.getElementById('resultTime').textContent,
+              expectedTime: window.AphelionRules.formatTime(snapshot.time),
+              underTwoMinutes: snapshot.achievements
+                .find(achievement => achievement.id === 'under-two-minutes').unlocked
+            };
+            """
+        )
+        self.assertGreater(result["snapshot"]["time"], 121, json.dumps(result, indent=2))
+        self.assertEqual(active["score"] + 11250, result["snapshot"]["score"], json.dumps(result, indent=2))
+        self.assertEqual(result["expectedTime"], result["resultTime"], json.dumps(result, indent=2))
+        self.assertFalse(result["underTwoMinutes"], json.dumps(result, indent=2))
+        self.driver.switch_to.default_content()
+
     def test_result_content_is_visible_at_short_and_intermediate_viewports(self):
         viewports = [
             (320, 234),

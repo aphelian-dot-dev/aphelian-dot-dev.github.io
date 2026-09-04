@@ -6,11 +6,42 @@ const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'game-rules.js'), 'utf8');
 
+test('visible game branding uses Aphelian', () => {
+  assert.match(html, /<title>APHELIAN — The Last Orrery<\/title>/);
+  assert.match(html, /aria-label="Aphelian, a celestial-sorcery defense game"/);
+  assert.match(html, /<h1 id="mainTitle">APHELIAN<\/h1>/);
+  assert.match(html, /Aphelian Sweep/);
+  assert.doesNotMatch(html, /APHELION/);
+});
+
 test('browser rules are embedded exactly so a portal-exposed index works alone', () => {
   const embedded = html.match(/<script id="aphelionRulesSource">([\s\S]*?)<\/script>/);
   assert.ok(embedded, 'expected an inline Aphelion rules script');
   assert.equal(embedded[1], `\n${rulesSource}`);
   assert.doesNotMatch(html, /<script src="game-rules\.js"><\/script>/);
+});
+
+test('boss fight has no deadline and the HUD tracks total rite time', () => {
+  assert.doesNotMatch(html, /const TOTALITY =/);
+  assert.doesNotMatch(html, /TOTAL ECLIPSE/);
+  assert.match(html, /const displayedTime = game\.phase < 3 \? Math\.max\(0, BOSS_TIME - game\.time\) : game\.time;/);
+  assert.match(html, /game\.phase < 3 \? "TOTALITY APPROACHES" : "RITE ELAPSED"/);
+  assert.match(html, /if \(p\.hp <= 0\) endGame\(false, "VITAL LIGHT EXTINGUISHED"\);/);
+  assert.match(rulesSource, /stats\.won === true && Number\(stats\.time\) < 120/);
+});
+
+test('ordinary score sources share a two-minute cutoff while boss rewards remain guaranteed', () => {
+  assert.match(html, /const RITE_SCORE_WINDOW = 120;/);
+  assert.match(html, /function awardScore\(points, guaranteed = false\)/);
+  assert.deepEqual(
+    [...html.matchAll(/game\.score \+= ([^;]+);/g)].map(match => match[1]),
+    ['awarded']
+  );
+  assert.match(html, /awardScore\(dt \* \(8 \+ game\.phase \* 2\)\);/);
+  assert.match(html, /awardScore\(175\);/);
+  assert.match(html, /const awarded = awardScore\(points, e\.boss\);/);
+  assert.match(html, /awardScore\(250\);/);
+  assert.match(html, /awardScore\(5000 \+ Math\.round\(Math\.max\(0, SPEED_BONUS_WINDOW - game\.time\) \* 100\), true\);/);
 });
 
 test('player Vital Light is rendered as five diamond health slivers', () => {

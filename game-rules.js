@@ -92,7 +92,7 @@
     const rarestLabel = rarest ? `${rarest.title} [${rarest.difficulty}]` : "NONE THIS RUN";
     const paddedScore = String(Math.max(0, Math.floor(Number(score) || 0))).padStart(6, "0");
     return [
-      "APHELION // THE LAST ORRERY",
+      "APHELIAN // THE LAST ORRERY",
       `Score: ${paddedScore}`,
       `Best Chain: ×${Math.max(0, Math.floor(Number(bestChain) || 0))}`,
       `Rite: ${formatTime(time)}`,

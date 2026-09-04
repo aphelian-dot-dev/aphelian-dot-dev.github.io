@@ -105,7 +105,7 @@ test('share text includes score, best chain, rite time, and rarest achievement',
   });
   assert.equal(
     rules.buildShareText({ score: 12345.9, bestChain: 20, time: 80, achievements }),
-    'APHELION // THE LAST ORRERY\nScore: 012345\nBest Chain: ×20\nRite: 01:20\nRarest Achievement: WOUNDED / NEVER HEALED [HARD]\nhttps://aphelian.dev'
+    'APHELIAN // THE LAST ORRERY\nScore: 012345\nBest Chain: ×20\nRite: 01:20\nRarest Achievement: WOUNDED / NEVER HEALED [HARD]\nhttps://aphelian.dev'
   );
 });
 

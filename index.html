@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05050e">
   <meta name="color-scheme" content="dark">
-  <title>APHELION — The Last Orrery</title>
+  <title>APHELIAN — The Last Orrery</title>
   <style>
     :root {
       --void: #05050e;
@@ -744,8 +744,8 @@
   </style>
 </head>
 <body>
-  <canvas id="game" tabindex="0" aria-label="Aphelion, a celestial-sorcery defense game" aria-describedby="gameInstructions"></canvas>
-  <p id="gameInstructions" class="sr-only">Three crescent Ward Moons orbit you and damage Voidcraft on contact. Hold, then release to drive them outward; any charged release is a Ward Moon Strike. At 36 percent charge, release an Aphelion Sweep: all three solid Lattice edges cut. Amber timing restores 21 Focus. White bars show remaining Voidcraft health. Amber-cored Cinder Skiffs drop Orrery Fuel; collect it for a two-second movement boost shown above you. One harmless wayfaring meteor crosses each movement; strike it three times to quicken the Ward Moons for five seconds. Five diamonds at the lower left show your Vital Light in twenty-percent slivers. Right click or Shift activates Retrograde and reverses the Ward Moons.</p>
+  <canvas id="game" tabindex="0" aria-label="Aphelian, a celestial-sorcery defense game" aria-describedby="gameInstructions"></canvas>
+  <p id="gameInstructions" class="sr-only">Three crescent Ward Moons orbit you and damage Voidcraft on contact. Hold, then release to drive them outward; any charged release is a Ward Moon Strike. At 36 percent charge, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores 21 Focus. White bars show remaining Voidcraft health. Amber-cored Cinder Skiffs drop Orrery Fuel; collect it for a two-second movement boost shown above you. One harmless wayfaring meteor crosses each movement; strike it three times to quicken the Ward Moons for five seconds. Five diamonds at the lower left show your Vital Light in twenty-percent slivers. Right click or Shift activates Retrograde and reverses the Ward Moons.</p>
 
   <section id="overlay" class="overlay" data-state="title" aria-hidden="false" aria-labelledby="mainTitle">
     <header class="edition" aria-hidden="true">
@@ -756,12 +756,12 @@
     <main class="cover">
       <div class="title-block">
         <div id="eyebrow" class="index-mark">A rite in three movements</div>
-        <h1 id="mainTitle">APHELION</h1>
+        <h1 id="mainTitle">APHELIAN</h1>
         <p id="subtitle" class="kicker">Command three Ward Moons around the last orrery. Break the approaching Voidcraft before totality.</p>
       </div>
 
       <div class="briefing">
-        <p id="briefingCopy" class="briefing-copy">The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelion Sweep: all three solid Lattice edges cut. Amber timing restores Focus.</p>
+        <p id="briefingCopy" class="briefing-copy">The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.</p>
 
         <div class="controls" aria-label="Controls">
           <div class="control"><b>Move</b><span class="desktop-note">WASD / arrows</span><span class="touch-note">Drag left field</span></div>
@@ -772,7 +772,7 @@
 
         <div class="field-guide" role="list" aria-label="Combat field reference">
           <div class="guide-entry" role="listitem"><b>Ward Moons</b><span>Three crescents. Contact damages Voidcraft; hold + release to strike.</span></div>
-          <div class="guide-entry" role="listitem"><b>Lattice</b><span>At 36%, release an Aphelion Sweep: all three solid edges cut. Amber timing restores Focus.</span></div>
+          <div class="guide-entry" role="listitem"><b>Lattice</b><span>At 36%, release an Aphelian Sweep: all three solid edges cut. Amber timing restores Focus.</span></div>
           <div class="guide-entry" role="listitem"><b>Voidcraft</b><span>Incoming threats. White bar = remaining health.</span></div>
           <div class="guide-entry" role="listitem"><b>Retrograde</b><span>Right click or Shift reverses Ward Moon rotation.</span></div>
         </div>
@@ -904,7 +904,7 @@
     const rarestLabel = rarest ? `${rarest.title} [${rarest.difficulty}]` : "NONE THIS RUN";
     const paddedScore = String(Math.max(0, Math.floor(Number(score) || 0))).padStart(6, "0");
     return [
-      "APHELION // THE LAST ORRERY",
+      "APHELIAN // THE LAST ORRERY",
       `Score: ${paddedScore}`,
       `Best Chain: ×${Math.max(0, Math.floor(Number(bestChain) || 0))}`,
       `Rite: ${formatTime(time)}`,
@@ -966,7 +966,7 @@
                  |
                 ( )
 
-      APHELION // THE LAST ORRERY
+      APHELIAN // THE LAST ORRERY
       THIS GAME NEEDS JAVASCRIPT TO AWAKEN THE ORRERY.`,
       "color:#f4b573; background:#05050e; font-family:monospace; font-size:12px; line-height:1.2;"
     );
@@ -974,7 +974,9 @@
     const TAU = Math.PI * 2;
     const STEP = 1 / 60;
     const BOSS_TIME = 60;
-    const TOTALITY = 90;
+    const DIFFICULTY_RAMP_TIME = 90;
+    const SPEED_BONUS_WINDOW = 90;
+    const RITE_SCORE_WINDOW = 120;
     const VITAL_ECHO_DURATION = .95;
     const FUEL_BOOST_DURATION = 2;
     const MIN_MOON_STRIKE_CHARGE = .001;
@@ -1462,7 +1464,7 @@
         achievements: game.achievements
       });
       if (typeof navigator.share === "function") {
-        navigator.share({ title: "APHELION // THE LAST ORRERY", text })
+        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text })
           .then(() => showShareFeedback("Run shared", attempt))
           .catch(error => {
             if (error && error.name === "AbortError") return;
@@ -1498,7 +1500,7 @@
       catch (_) { /* prompt fallback below */ }
       field.remove();
       if (copied) showShareFeedback("Run copied", attempt);
-      else window.prompt("Copy your APHELION run:", text);
+      else window.prompt("Copy your APHELIAN run:", text);
     }
 
     function showShareFeedback(message, attempt) {
@@ -1549,9 +1551,9 @@
         riteButton.textContent = "Cast the rite again";
       } else {
         eyebrow.textContent = "A rite in three movements";
-        mainTitle.textContent = "APHELION";
+        mainTitle.textContent = "APHELIAN";
         subtitle.textContent = "Command three Ward Moons around the last orrery. Break the approaching Voidcraft before totality.";
-        briefingCopy.textContent = "The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelion Sweep: all three solid Lattice edges cut. Amber timing restores Focus.";
+        briefingCopy.textContent = "The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.";
         riteButton.textContent = "Begin the rite";
       }
       setOverlayHidden(false);
@@ -1560,6 +1562,12 @@
 
     function showChapter(kicker, title, duration = 2.4) {
       game.chapter = { kicker, title, time: duration, duration };
+    }
+
+    function awardScore(points, guaranteed = false) {
+      const awarded = guaranteed || game.time < RITE_SCORE_WINDOW ? points : 0;
+      game.score += awarded;
+      return awarded;
     }
 
     function update(dt) {
@@ -1576,7 +1584,7 @@
       }
 
       game.time += dt;
-      game.score += dt * (8 + game.phase * 2);
+      awardScore(dt * (8 + game.phase * 2));
       game.chainTimer -= dt;
       if (game.chainTimer <= 0) game.chain = 0;
 
@@ -1594,11 +1602,6 @@
         } else if (game.phase === 3 && !game.bossSpawned) {
           spawnBoss();
         }
-      }
-
-      if (game.time >= TOTALITY && game.boss && !game.boss.dead) {
-        endGame(false, "TOTAL ECLIPSE");
-        return;
       }
 
       updatePlayer(p, dt);
@@ -1767,9 +1770,9 @@
       const perfect = charge >= .72 && charge <= .96 && !forced;
       if (perfect) {
         p.focus = Math.min(100, p.focus + 21);
-        game.score += 175;
+        awardScore(175);
         game.flash = Math.max(game.flash, .17);
-        game.floaters.push({ x: p.x, y: p.y - 34, text: "PERFECT APHELION / +21 FOCUS", color: COLORS.emberPale, life: 1.1, vy: -20 });
+        game.floaters.push({ x: p.x, y: p.y - 34, text: "PERFECT APHELIAN / +21 FOCUS", color: COLORS.emberPale, life: 1.1, vy: -20 });
       }
       game.shake = Math.max(game.shake, reducedMotion ? 0 : 3 + charge * 7);
       spawnWave(p.x, p.y, p.radius * .54, 390 + charge * 240, .65, perfect ? COLORS.emberPale : COLORS.paper, 2.1);
@@ -1902,7 +1905,7 @@
 
     function spawnEnemy(type, x = null, y = null) {
       const pos = x === null ? edgeSpawn(54) : { x, y };
-      const difficulty = 1 + clamp(game.time / TOTALITY, 0, 1) * .55;
+      const difficulty = 1 + clamp(game.time / DIFFICULTY_RAMP_TIME, 0, 1) * .55;
       const defs = {
         shard: { r: 10, hp: 1.05, speed: 66, value: 100, damage: 18 },
         cinder: { r: 12, hp: 1.7, speed: 58, value: 240, damage: 16 },
@@ -1977,7 +1980,7 @@
       game.boss = boss;
       game.enemies.push(boss);
       showChapter("TOTALITY", "SEAL THE BLACK SUN", 3.1);
-      announcer.textContent = "Totality. Seal the black sun before the final eclipse.";
+      announcer.textContent = "Totality. Seal the black sun.";
       game.flash = .28;
       game.shake = reducedMotion ? 0 : 10;
       spawnWave(W / 2, H / 2, 20, 520, 1.2, COLORS.ember, 2.4);
@@ -2233,14 +2236,14 @@
       game.bestChain = Math.max(game.bestChain, game.chain);
       const style = source === "aphelion" ? 1.25 : source === "lattice" ? 1.15 : source === "retrograde" ? 1.2 : 1;
       const points = Math.round(e.value * (1 + (game.chain - 1) * .16) * style);
-      game.score += points;
-      game.floaters.push({ x: e.x, y: e.y - e.r, text: `+${points}`, color: source === "aphelion" ? COLORS.emberPale : COLORS.paper, life: .9, vy: -32 });
+      const awarded = awardScore(points, e.boss);
+      if (awarded > 0) game.floaters.push({ x: e.x, y: e.y - e.r, text: `+${awarded}`, color: source === "aphelion" ? COLORS.emberPale : COLORS.paper, life: .9, vy: -32 });
       spawnInkBurst(e.x, e.y, e.boss ? COLORS.ember : COLORS.cobaltSoft, reducedMotion ? 9 : (e.boss ? 68 : 18), e.boss ? 260 : 145);
       spawnWave(e.x, e.y, e.r * .5, e.boss ? 500 : 230, e.boss ? 1.1 : .55, e.boss ? COLORS.emberPale : COLORS.paper, e.boss ? 3 : 1.5);
       audioKill(e.boss, game.chain);
 
       if (e.boss) {
-        game.score += 5000 + Math.round(Math.max(0, TOTALITY - game.time) * 100);
+        awardScore(5000 + Math.round(Math.max(0, SPEED_BONUS_WINDOW - game.time) * 100), true);
         game.victoryPending = 1.2;
         game.flash = .45;
         game.shake = reducedMotion ? 0 : 18;
@@ -2309,7 +2312,7 @@
         pickup.y += pickup.vy * dt;
         if (d < 22) {
           pickup.life = 0;
-          game.score += 250;
+          awardScore(250);
           if (pickup.type === "fuel") {
             p.fuelTime = FUEL_BOOST_DURATION;
             game.floaters.push({ x: p.x, y: p.y - 30, text: "ORRERY FUEL / SWIFT 2 SEC", color: COLORS.emberPale, life: 1, vy: -24 });
@@ -3369,11 +3372,11 @@
       ctx.textAlign = "right";
       ctx.fillStyle = COLORS.muted;
       ctx.font = `700 ${compact ? 8 : 9}px 'Courier New', monospace`;
-      ctx.fillText(game.phase < 3 ? "TOTALITY APPROACHES" : "FINAL ECLIPSE", W - pad, top);
+      ctx.fillText(game.phase < 3 ? "TOTALITY APPROACHES" : "RITE ELAPSED", W - pad, top);
       ctx.fillStyle = game.phase < 3 ? COLORS.paper : COLORS.emberPale;
       ctx.font = `700 ${compact ? 24 : 34}px Baskerville, Georgia, serif`;
-      const remaining = game.phase < 3 ? BOSS_TIME - game.time : TOTALITY - game.time;
-      ctx.fillText(formatTime(remaining), W - pad, top + 12);
+      const displayedTime = game.phase < 3 ? Math.max(0, BOSS_TIME - game.time) : game.time;
+      ctx.fillText(formatTime(displayedTime), W - pad, top + 12);
 
       // Timeline and movement markers.
       const lineW = compact ? W * .38 : Math.min(380, W * .34);
@@ -3394,7 +3397,7 @@
         ctx.fill();
         ctx.stroke();
       }
-      const progress = clamp(game.time / TOTALITY, 0, 1);
+      const progress = clamp(game.time / BOSS_TIME, 0, 1);
       ctx.strokeStyle = game.phase === 3 ? COLORS.ember : COLORS.cobaltSoft;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -3431,7 +3434,7 @@
       const focusLabel = narrowHud
         ? p.burst > 0
           ? p.burstCharge >= LATTICE_IGNITION
-            ? "APHELION / SWEEP"
+            ? "APHELIAN / SWEEP"
             : "STRIKE / FAINT"
           : p.folding && p.charge >= LATTICE_IGNITION
             ? "LATTICE / RELEASE"
@@ -3440,7 +3443,7 @@
               : "FOCUS / HOLD>CAST"
         : p.burst > 0
           ? p.burstCharge >= LATTICE_IGNITION
-            ? "APHELION SWEEP / MOONS + EDGES HIT"
+            ? "APHELIAN SWEEP / MOONS + EDGES HIT"
             : "WARD MOON STRIKE / LATTICE NOT LIT"
           : p.folding && p.charge >= LATTICE_IGNITION
             ? "LATTICE LIVE / ALL THREE EDGES CUT"
@@ -3792,8 +3795,14 @@
           spawnBoss();
         }
       },
+      setElapsedTime: seconds => {
+        const elapsed = Number(seconds);
+        if (game.mode !== "playing" || !Number.isFinite(elapsed) || elapsed < game.time) return false;
+        game.time = elapsed;
+        return true;
+      },
       finish: won => {
-        if (game.mode === "playing") endGame(Boolean(won), won ? "THE BLACK SUN IS SEALED" : "TOTAL ECLIPSE");
+        if (game.mode === "playing") endGame(Boolean(won), won ? "THE BLACK SUN IS SEALED" : "VITAL LIGHT EXTINGUISHED");
       },
       defeatBoss: () => {
         if (game.mode === "playing" && game.boss && !game.boss.dead) {
