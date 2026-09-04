@@ -140,3 +140,127 @@ test('meteor travel speed is slightly slower than normal player movement', () =>
 test('destroying a meteor grants a five-second orbit boost', () => {
   assert.equal(rules.METEOR_BOOST_DURATION, 5);
 });
+
+test('score archive stores a normalized completed run newest first', () => {
+  const previous = {
+    version: 1,
+    runs: [{
+      score: 75,
+      won: false,
+      bestChain: 2,
+      time: 30,
+      completedAt: '2026-09-03T12:00:00.000Z'
+    }]
+  };
+
+  const history = rules.appendScoreHistory(previous, {
+    score: 123.9,
+    won: true,
+    bestChain: 4.8,
+    time: 65.67,
+    completedAt: '2026-09-04T12:00:00.000Z'
+  });
+
+  assert.deepEqual(history, {
+    version: 1,
+    runs: [
+      {
+        score: 123,
+        won: true,
+        bestChain: 4,
+        time: 65.7,
+        completedAt: '2026-09-04T12:00:00.000Z'
+      },
+      previous.runs[0]
+    ]
+  });
+});
+
+test('score archive keeps only the ten most recent runs', () => {
+  let history = { version: 1, runs: [] };
+  for (let score = 1; score <= 12; score += 1) {
+    history = rules.appendScoreHistory(history, {
+      score,
+      won: false,
+      bestChain: 0,
+      time: score,
+      completedAt: `2026-09-${String(score).padStart(2, '0')}T12:00:00.000Z`
+    });
+  }
+
+  assert.equal(history.runs.length, 10);
+  assert.deepEqual(history.runs.map(run => run.score), [12, 11, 10, 9, 8, 7, 6, 5, 4, 3]);
+});
+
+test('score archive serializes and parses its documented JSON shape', () => {
+  const history = {
+    version: 1,
+    runs: [{
+      score: 9321,
+      won: true,
+      bestChain: 14,
+      time: 87.4,
+      completedAt: '2026-09-04T13:00:00.000Z'
+    }]
+  };
+
+  const serialized = rules.serializeScoreHistory(history);
+  assert.equal(serialized, JSON.stringify(history));
+  assert.deepEqual(rules.parseScoreHistory(serialized), history);
+});
+
+test('score archive treats malformed or unknown cookie data as empty', () => {
+  const empty = { version: 1, runs: [] };
+  assert.deepEqual(rules.parseScoreHistory('{not-json'), empty);
+  assert.deepEqual(rules.parseScoreHistory(JSON.stringify({ version: 2, runs: [{ score: 99 }] })), empty);
+  assert.deepEqual(
+    rules.parseScoreHistory(JSON.stringify({
+      version: 1,
+      runs: [null, 'bad', { score: 'not-number', won: false, bestChain: 0, time: 2, completedAt: 'not-a-date' }]
+    })),
+    empty
+  );
+});
+
+test('stored score archive rejects coerced and negative numeric fields', () => {
+  const validRun = {
+    score: 100,
+    won: true,
+    bestChain: 5,
+    time: 42.5,
+    completedAt: '2026-09-04T13:00:00.000Z'
+  };
+  const invalidValues = [null, true, false, [], [1], '7', -1];
+
+  for (const field of ['score', 'bestChain', 'time']) {
+    for (const value of invalidValues) {
+      const serialized = JSON.stringify({
+        version: 1,
+        runs: [{ ...validRun, [field]: value }]
+      });
+      assert.equal(
+        rules.parseStoredScoreHistory(serialized),
+        null,
+        `${field} must reject ${JSON.stringify(value)}`
+      );
+    }
+  }
+});
+
+test('score archive keeps finite huge values finite while normalizing', () => {
+  const history = rules.parseScoreHistory(JSON.stringify({
+    version: 1,
+    runs: [{
+      score: 1e308,
+      won: true,
+      bestChain: 1e308,
+      time: 1e308,
+      completedAt: '2026-09-04T13:00:00.000Z'
+    }]
+  }));
+
+  assert.equal(history.runs.length, 1);
+  assert.equal(history.runs[0].time, 1e308);
+  assert.ok(Object.values(history.runs[0]).every(value => typeof value !== 'number' || Number.isFinite(value)));
+  assert.doesNotMatch(rules.serializeScoreHistory(history), /null/);
+});
