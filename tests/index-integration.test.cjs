@@ -6,6 +6,17 @@ const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const rulesSource = fs.readFileSync(path.join(__dirname, '..', 'game-rules.js'), 'utf8');
 
+test('startup console renders the archival Little Orrery sigil', () => {
+  assert.match(html, /┌───────────────────────────────┐/);
+  assert.match(html, /│\s+☾\s+│/);
+  assert.match(html, /│\s+╱\s+◉\s+╲\s+│/);
+  assert.match(html, /│\s+☾───────────☽\s+│/);
+  assert.match(html, /│  APHELIAN \/\/ THE LAST ORRERY  │/);
+  assert.match(html, /│  THE OBSERVATORY REMEMBERS\.   │/);
+  assert.match(html, /└───────────────────────────────┘/);
+  assert.doesNotMatch(html, /THIS GAME NEEDS JAVASCRIPT TO AWAKEN THE ORRERY/);
+});
+
 test('visible game branding uses Aphelian', () => {
   assert.match(html, /<title>APHELIAN — The Last Orrery<\/title>/);
   assert.match(html, /aria-label="Aphelian, a celestial-sorcery defense game"/);
@@ -53,12 +64,15 @@ test('player Vital Light is rendered as five diamond health slivers', () => {
 
 test('post-run achievement panel evaluates all tracked run conditions', () => {
   assert.match(html, /id="achievementList"/);
-  assert.match(html, /function renderAchievements\(won\)/);
-  assert.match(html, /AphelionRules\.evaluateAchievements\(/);
-  assert.match(html, /game\.runStats\.damageTaken/);
-  assert.match(html, /game\.runStats\.moved/);
-  assert.match(html, /game\.runStats\.healed/);
-  assert.match(html, /game\.runStats\.reversals/);
+  assert.match(html, /id="achievementCount">0 \/ 7<\/strong>/);
+  const renderer = html.match(/function renderAchievements\(won\) \{([\s\S]*?)\n    function shareRun\(\)/);
+  assert.ok(renderer, 'expected the post-run achievement renderer');
+  assert.match(renderer[1], /AphelionRules\.evaluateAchievements\(/);
+  assert.match(renderer[1], /game\.runStats\.damageTaken/);
+  assert.match(renderer[1], /game\.runStats\.moved/);
+  assert.match(renderer[1], /game\.runStats\.healed/);
+  assert.match(renderer[1], /score: game\.score/);
+  assert.match(renderer[1], /game\.runStats\.reversals/);
   assert.match(html, /Math\.min\(99, game\.chain \+ 1\)/);
 });
 

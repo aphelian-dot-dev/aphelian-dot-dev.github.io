@@ -24,7 +24,7 @@ test('health diamonds represent five 20-percent health slivers', () => {
   }
 });
 
-test('achievement catalog contains the six requested run feats and difficulties', () => {
+test('achievement catalog contains the seven requested run feats and difficulties', () => {
   assert.deepEqual(
     rules.ACHIEVEMENTS.map(({ id, difficulty }) => [id, difficulty]),
     [
@@ -33,6 +33,7 @@ test('achievement catalog contains the six requested run feats and difficulties'
       ['no-movement', 'VERY HARD'],
       ['wounded-unhealed', 'HARD'],
       ['chain-20', 'MEDIUM'],
+      ['score-100k', 'HARD'],
       ['no-reversal', 'EASY']
     ]
   );
@@ -69,6 +70,11 @@ test('wounded-unhealed achievement requires a wounded win with no healing', () =
 test('chain-20 achievement unlocks at a best chain of twenty', () => {
   assert.equal(unlocked({ bestChain: 20 }, 'chain-20'), true);
   assert.equal(unlocked({ bestChain: 19 }, 'chain-20'), false);
+});
+
+test('six-figure rite achievement unlocks at a score of 100,000', () => {
+  assert.equal(unlocked({ score: 100000 }, 'score-100k'), true);
+  assert.equal(unlocked({ score: 99999.99 }, 'score-100k'), false);
 });
 
 test('no-reversal achievement tracks whether Retrograde was used', () => {

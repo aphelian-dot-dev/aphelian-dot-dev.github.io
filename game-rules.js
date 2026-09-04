@@ -45,6 +45,13 @@
       rank: 2
     }),
     Object.freeze({
+      id: "score-100k",
+      title: "SIX-FIGURE RITE",
+      description: "Earn a score of 100,000 or more in one rite.",
+      difficulty: "HARD",
+      rank: 3
+    }),
+    Object.freeze({
       id: "no-reversal",
       title: "NEVER REVERSED COURSE",
       description: "Complete the run without Retrograde.",
@@ -148,6 +155,7 @@
         && Number(stats.health) < 100
         && stats.healed !== true,
       "chain-20": Number(stats.bestChain) >= 20,
+      "score-100k": Number(stats.score) >= 100000,
       "no-reversal": (Number(stats.reversals) || 0) === 0
     };
     return ACHIEVEMENTS.map(achievement => ({
