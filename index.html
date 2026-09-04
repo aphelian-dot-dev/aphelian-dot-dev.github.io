@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aphelian — a new corner of the web, coming soon.">
+  <meta name="theme-color" content="#0a0a0b">
+  <title>Aphelian</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f0e8;
+      --muted: #aaa69f;
+      --night: #0a0a0b;
+      --line: rgba(244, 240, 232, 0.16);
+      --ember: #ef815c;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 74% 28%, rgba(239, 129, 92, 0.08), transparent 24rem),
+        var(--night);
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .shell {
+      width: min(100% - 2.5rem, 78rem);
+      min-height: 100svh;
+      margin-inline: auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header,
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-block: 1.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    header { border-bottom: 1px solid var(--line); }
+    footer { border-top: 1px solid var(--line); color: var(--muted); }
+
+    .mark {
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--muted);
+    }
+
+    .status::before {
+      content: "";
+      width: 0.45rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--ember);
+      box-shadow: 0 0 1rem rgba(239, 129, 92, 0.65);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.75fr);
+      align-items: center;
+      gap: clamp(3rem, 8vw, 8rem);
+      padding-block: clamp(4rem, 10vh, 8rem);
+    }
+
+    .eyebrow {
+      margin: 0 0 1.25rem;
+      color: var(--ember);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 9ch;
+      margin: 0;
+      font-size: clamp(4.6rem, 11vw, 10rem);
+      font-weight: 400;
+      letter-spacing: -0.075em;
+      line-height: 0.82;
+    }
+
+    .intro {
+      max-width: 31rem;
+      margin: 2rem 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.7vw, 1.25rem);
+      line-height: 1.65;
+    }
+
+    .orbit {
+      position: relative;
+      width: min(32rem, 100%);
+      aspect-ratio: 1;
+      justify-self: end;
+      display: grid;
+      place-items: center;
+    }
+
+    .orbit::before,
+    .orbit::after {
+      content: "";
+      position: absolute;
+      inset: 13%;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      transform: rotate(-28deg) scaleX(0.52);
+    }
+
+    .orbit::after {
+      inset: 26%;
+      opacity: 0.45;
+      transform: rotate(24deg) scaleX(0.7);
+    }
+
+    .sun {
+      width: clamp(4rem, 8vw, 6.5rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 0 5rem rgba(244, 240, 232, 0.12);
+    }
+
+    .traveler {
+      position: absolute;
+      top: 15%;
+      right: 24%;
+      width: 0.8rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--ember);
+      box-shadow: 0 0 1.5rem rgba(239, 129, 92, 0.8);
+      animation: breathe 3.6s ease-in-out infinite;
+    }
+
+    .orbit-label {
+      position: absolute;
+      right: 4%;
+      bottom: 19%;
+      margin: 0;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.14em;
+      line-height: 1.65;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    @keyframes breathe {
+      50% { transform: scale(1.28); box-shadow: 0 0 2.2rem rgba(239, 129, 92, 0.95); }
+    }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 2rem, 42rem); }
+
+      main {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        padding-block: 4rem 2rem;
+      }
+
+      h1 { font-size: clamp(4rem, 22vw, 7rem); }
+      .intro { margin-top: 1.5rem; }
+
+      .orbit {
+        width: min(22rem, 90vw);
+        justify-self: center;
+      }
+
+      .orbit-label { right: 0; }
+      footer { align-items: flex-start; }
+    }
+
+    @media (max-width: 420px) {
+      header,
+      footer { font-size: 0.62rem; letter-spacing: 0.12em; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .traveler { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <a class="mark" href="/" aria-label="Aphelian home">Aphelian</a>
+      <span class="status">In formation</span>
+    </header>
+
+    <main>
+      <section aria-labelledby="title">
+        <p class="eyebrow">At the far point</p>
+        <h1 id="title">Aphelian</h1>
+        <p class="intro">A new corner of the web is taking shape. Something thoughtful is on the way.</p>
+      </section>
+
+      <figure class="orbit" aria-label="Abstract orbital diagram marking the far point in an orbit">
+        <span class="sun" aria-hidden="true"></span>
+        <span class="traveler" aria-hidden="true"></span>
+        <figcaption class="orbit-label">A distant point<br>with a clear view</figcaption>
+      </figure>
+    </main>
+
+    <footer data-verify-section aria-label="Footer">
+      <span>&copy; Aphelian</span>
+      <span>More soon</span>
+    </footer>
+  </div>
+</body>
+</html>
