@@ -1922,6 +1922,113 @@ class ResultScreenBrowserTests(unittest.TestCase):
                 failures.append({"viewport": [width, height], "horizontalOverflow": True})
         self.assertEqual([], failures, json.dumps(failures, indent=2))
 
+    def test_six_figure_rite_achievement_unlocks_in_run_results(self):
+        self.driver.get(f"{self.base_url}/index.html?debug=1")
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script('return typeof window.__ORRERY__ === "object"')
+        )
+        result = self.execute_awaited(
+            """
+            window.__ORRERY__.start();
+            const scoreSet = window.__ORRERY__.setScore(100000);
+            await window.__ORRERY__.finish(true);
+            const achievement = window.__ORRERY__.snapshot().achievements
+              .find(item => item.id === 'score-100k');
+            const row = [...document.querySelectorAll('.achievement-item')]
+              .find(item => item.getAttribute('aria-label').startsWith('SIX-FIGURE RITE.'));
+            return {
+              scoreSet,
+              achievement,
+              rowUnlocked: Boolean(row && row.classList.contains('is-unlocked')),
+              rowLabel: row ? row.getAttribute('aria-label') : ''
+            };
+            """
+        )
+        self.assertTrue(result["scoreSet"], json.dumps(result, indent=2))
+        self.assertEqual(
+            {"id": "score-100k", "difficulty": "HARD", "unlocked": True},
+            result["achievement"],
+        )
+        self.assertTrue(result["rowUnlocked"], json.dumps(result, indent=2))
+        self.assertIn("Earned", result["rowLabel"])
+        self.assertIn("100,000 or more", result["rowLabel"])
+
+    def test_return_home_button_restores_title_screen_after_a_run(self):
+        self.driver.get(f"{self.base_url}/index.html?debug=1")
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script('return typeof window.__ORRERY__ === "object"')
+        )
+        self.driver.execute_script("window.__ORRERY__.start(); window.__ORRERY__.finish(true)")
+        WebDriverWait(self.driver, 5).until(
+            lambda driver: driver.execute_script('return window.__ORRERY__.snapshot().mode === "won"')
+        )
+
+        home_button = self.driver.find_element("id", "homeButton")
+        self.assertTrue(home_button.is_displayed())
+        home_button.click()
+
+        state = self.driver.execute_script(
+            """
+            const overlay = document.getElementById('overlay');
+            const home = document.getElementById('homeButton');
+            return {
+              mode: window.__ORRERY__.snapshot().mode,
+              overlayState: overlay.dataset.state,
+              overlayHidden: overlay.getAttribute('aria-hidden'),
+              title: document.getElementById('mainTitle').textContent,
+              archiveVisible: getComputedStyle(document.getElementById('scoreArchive')).display !== 'none',
+              homeVisible: getComputedStyle(home).display !== 'none',
+              playingClass: document.body.classList.contains('is-playing'),
+              focused: document.activeElement && document.activeElement.id
+            };
+            """
+        )
+        self.assertEqual(
+            {
+                "mode": "title",
+                "overlayState": "title",
+                "overlayHidden": "false",
+                "title": "APHELIAN",
+                "archiveVisible": True,
+                "homeVisible": False,
+                "playingClass": False,
+                "focused": "riteButton",
+            },
+            state,
+        )
+
+    def test_return_home_refreshes_the_score_archive_after_an_in_flight_save(self):
+        self.driver.get(f"{self.base_url}/index.html?debug=1")
+        self.driver.delete_all_cookies()
+        self.driver.refresh()
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script('return typeof window.__ORRERY__ === "object"')
+        )
+        self.driver.find_element("id", "rememberScoresButton").click()
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script('return window.__ORRERY__.scoreArchive().enabled')
+        )
+
+        state = self.execute_awaited(
+            """
+            window.__ORRERY__.start();
+            window.__ORRERY__.setScore(43210);
+            const save = window.__ORRERY__.finish(true);
+            document.getElementById('homeButton').click();
+            await save;
+            return {
+              mode: window.__ORRERY__.snapshot().mode,
+              savedRuns: window.__ORRERY__.scoreArchive().history.runs.length,
+              renderedRows: document.getElementById('scoreHistoryList').children.length,
+              summary: document.getElementById('scoreHistorySummary').textContent
+            };
+            """
+        )
+        self.assertEqual("title", state["mode"], json.dumps(state, indent=2))
+        self.assertEqual(1, state["savedRuns"], json.dumps(state, indent=2))
+        self.assertEqual(1, state["renderedRows"], json.dumps(state, indent=2))
+        self.assertIn("1 completed rite saved", state["summary"])
+
     def test_share_feedback_resets_before_the_next_result(self):
         wrapper = (
             "<!doctype html><style>html,body{margin:0}iframe{display:block;border:0}</style>"

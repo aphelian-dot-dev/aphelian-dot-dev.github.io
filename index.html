@@ -386,7 +386,8 @@
       gap: 14px;
     }
 
-    .share-button {
+    .share-button,
+    .home-button {
       display: none;
       min-width: 150px;
       min-height: 52px;
@@ -404,8 +405,14 @@
       transition: transform 90ms ease, box-shadow 90ms ease, color 90ms ease, background 90ms ease;
     }
 
-    .overlay[data-state="result"] .share-button { display: block; }
-    .overlay[data-state="result"] .rite-button { flex: 1; min-width: 0; }
+    .overlay[data-state="result"] .result-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+    }
+
+    .overlay[data-state="result"] .share-button,
+    .overlay[data-state="result"] .home-button { display: block; min-width: 0; }
+    .overlay[data-state="result"] .rite-button { min-width: 0; width: auto; }
 
     .share-button::after {
       content: "↗";
@@ -414,20 +421,30 @@
       line-height: 8px;
     }
 
-    .share-button:hover {
+    .home-button::after {
+      content: "←";
+      float: right;
+      font-size: 15px;
+      line-height: 8px;
+    }
+
+    .share-button:hover,
+    .home-button:hover {
       background: var(--paper);
       color: var(--void);
       transform: translate(2px, 2px);
       box-shadow: 3px 3px 0 var(--ember);
     }
 
-    .share-button:active {
+    .share-button:active,
+    .home-button:active {
       transform: translate(5px, 5px);
       box-shadow: none;
     }
 
     .rite-button:focus-visible,
     .share-button:focus-visible,
+    .home-button:focus-visible,
     .sound-button:focus-visible {
       outline: 2px solid var(--ember);
       outline-offset: 4px;
@@ -680,6 +697,13 @@
       .overlay[data-state="result"] .kicker { margin-top: 10px; font-size: 10px; }
     }
 
+    @media (min-width: 640px) and (max-width: 1280px) and (min-height: 421px) and (max-height: 440px) {
+      .overlay[data-state="result"] .achievement-item {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+    }
+
     @media (max-height: 420px) {
       .overlay[data-state="title"] .controls { display: none; }
       .overlay[data-state="title"] .score-archive { margin: 0; }
@@ -744,14 +768,16 @@
       .overlay[data-state="result"] .achievement-difficulty { font-size: 6px; }
       .overlay[data-state="result"] .result-actions { gap: 8px; }
       .overlay[data-state="result"] .rite-button,
-      .overlay[data-state="result"] .share-button {
+      .overlay[data-state="result"] .share-button,
+      .overlay[data-state="result"] .home-button {
         min-height: 36px;
         padding: 9px 12px;
         font-size: 8px;
         box-shadow: 3px 3px 0 var(--paper);
       }
-      .overlay[data-state="result"] .share-button {
-        min-width: 120px;
+      .overlay[data-state="result"] .share-button,
+      .overlay[data-state="result"] .home-button {
+        min-width: 0;
         box-shadow: 3px 3px 0 var(--cobalt);
       }
       .overlay[data-state="result"][aria-hidden="false"] ~ .sound-button { display: none; }
@@ -994,7 +1020,7 @@
         <section class="achievements" aria-labelledby="achievementHeading">
           <div class="achievement-heading">
             <span id="achievementHeading">Post-rite achievements</span>
-            <strong id="achievementCount">0 / 6</strong>
+            <strong id="achievementCount">0 / 7</strong>
             <strong id="scoreSaveNotice" hidden>Score not saved</strong>
           </div>
           <ul id="achievementList" class="achievement-list"></ul>
@@ -1002,6 +1028,7 @@
 
         <div class="result-actions">
           <button id="riteButton" class="rite-button" type="button">Begin the rite</button>
+          <button id="homeButton" class="home-button" type="button">Home</button>
           <button id="shareButton" class="share-button" type="button">Share run</button>
         </div>
       </div>
@@ -1064,6 +1091,13 @@
       description: "Reach a twenty-destruction chain.",
       difficulty: "MEDIUM",
       rank: 2
+    }),
+    Object.freeze({
+      id: "score-100k",
+      title: "SIX-FIGURE RITE",
+      description: "Earn a score of 100,000 or more in one rite.",
+      difficulty: "HARD",
+      rank: 3
     }),
     Object.freeze({
       id: "no-reversal",
@@ -1169,6 +1203,7 @@
         && Number(stats.health) < 100
         && stats.healed !== true,
       "chain-20": Number(stats.bestChain) >= 20,
+      "score-100k": Number(stats.score) >= 100000,
       "no-reversal": (Number(stats.reversals) || 0) === 0
     };
     return ACHIEVEMENTS.map(achievement => ({
@@ -1255,17 +1290,16 @@
 
     console.info(
       "%c" + String.raw`
-                  *
-             .----+----.
-         ( )/     |     \( )
-            \    /|\    /
-             '--/_|_\--'
-                 |
-                ( )
-
-      APHELIAN // THE LAST ORRERY
-      THIS GAME NEEDS JAVASCRIPT TO AWAKEN THE ORRERY.`,
-      "color:#f4b573; background:#05050e; font-family:monospace; font-size:12px; line-height:1.2;"
+┌───────────────────────────────┐
+│              ☾                │
+│            ╱   ╲              │
+│          ╱   ◉   ╲            │
+│        ☾───────────☽          │
+│                               │
+│  APHELIAN // THE LAST ORRERY  │
+│  THE OBSERVATORY REMEMBERS.   │
+└───────────────────────────────┘`,
+      "color:#f4b573; background:#05050e; font-family:ui-monospace,monospace; font-size:12px; line-height:1.2;"
     );
 
     const TAU = Math.PI * 2;
@@ -1302,6 +1336,7 @@
     const subtitle = document.getElementById("subtitle");
     const briefingCopy = document.getElementById("briefingCopy");
     const riteButton = document.getElementById("riteButton");
+    const homeButton = document.getElementById("homeButton");
     const shareButton = document.getElementById("shareButton");
     const soundButton = document.getElementById("soundButton");
     const resultScore = document.getElementById("resultScore");
@@ -1739,6 +1774,7 @@
       if (scoreArchiveConsentRevoked || result.kind === "revoked") return;
       if (result.kind === "saved") {
         scoreArchiveState = result.state;
+        renderScoreArchive();
         return true;
       }
       if (result.kind === "disabled") {
@@ -2156,6 +2192,7 @@
         health: game.player ? game.player.hp : 0,
         healed: game.runStats.healed,
         bestChain: game.bestChain,
+        score: game.score,
         reversals: game.runStats.reversals
       });
       const fragment = document.createDocumentFragment();
@@ -2258,6 +2295,19 @@
       announcer.textContent = "";
     }
 
+    function returnHome() {
+      if (!["won", "lost"].includes(game.mode)) return;
+      shareAttempt += 1;
+      scoreSaveAttempt += 1;
+      resetShareFeedback();
+      clearInputs(true);
+      game.mode = "title";
+      game.endReason = "";
+      setAudioActive(false);
+      showOverlay("title");
+      announcer.textContent = "Returned to the observatory.";
+    }
+
     function setOverlayHidden(hidden) {
       overlay.setAttribute("aria-hidden", String(hidden));
       if (!hidden) riteButton.focus({ preventScroll: true });
@@ -2284,7 +2334,7 @@
         resultScore.textContent = padScore(game.score);
         resultChain.textContent = `×${game.bestChain}`;
         resultTime.textContent = formatTime(game.time);
-        riteButton.textContent = "Cast the rite again";
+        riteButton.textContent = "Cast again";
       } else {
         eyebrow.textContent = "A rite in three movements";
         mainTitle.textContent = "APHELIAN";
@@ -4470,6 +4520,7 @@
       if (game.mode === "paused") resumeGame();
       else startGame();
     });
+    homeButton.addEventListener("click", returnHome);
     shareButton.addEventListener("click", shareRun);
     rememberScoresButton.addEventListener("click", enableScoreArchive);
     declineScoresButton.addEventListener("click", declineScoreArchive);
@@ -4560,6 +4611,13 @@
         const elapsed = Number(seconds);
         if (game.mode !== "playing" || !Number.isFinite(elapsed) || elapsed < game.time) return false;
         game.time = elapsed;
+        return true;
+      },
+      setScore: score => {
+        const points = Number(score);
+        if (game.mode !== "playing" || !Number.isFinite(points) || points < 0) return false;
+        game.score = points;
+        game.shownScore = points;
         return true;
       },
       finish: won => {
