@@ -6,6 +6,8 @@
   "use strict";
 
   const METEOR_BOOST_DURATION = 5;
+  const SCORE_HISTORY_LIMIT = 10;
+  const SCORE_HISTORY_VERSION = 1;
   const ACHIEVEMENTS = Object.freeze([
     Object.freeze({
       id: "no-damage",
@@ -54,6 +56,86 @@
   function healthDiamondCount(health) {
     const value = Number.isFinite(Number(health)) ? Number(health) : 0;
     return Math.ceil(Math.max(0, Math.min(100, value)) / 20);
+  }
+
+  function nonNegativeFiniteNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 0;
+  }
+
+  function normalizeScoreRun(run = {}) {
+    const time = nonNegativeFiniteNumber(run.time);
+    return {
+      score: Math.floor(nonNegativeFiniteNumber(run.score)),
+      won: run.won === true,
+      bestChain: Math.floor(nonNegativeFiniteNumber(run.bestChain)),
+      time: time > Number.MAX_VALUE / 10 ? time : Math.round(time * 10) / 10,
+      completedAt: typeof run.completedAt === "string" ? run.completedAt : ""
+    };
+  }
+
+  function appendScoreHistory(history = {}, run = {}) {
+    const previousRuns = Array.isArray(history.runs) ? history.runs : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: [normalizeScoreRun(run), ...previousRuns.map(normalizeScoreRun)].slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function validStoredScoreNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  }
+
+  function validStoredScoreRun(run) {
+    return Boolean(
+      run
+      && typeof run === "object"
+      && !Array.isArray(run)
+      && validStoredScoreNumber(run.score)
+      && typeof run.won === "boolean"
+      && validStoredScoreNumber(run.bestChain)
+      && validStoredScoreNumber(run.time)
+      && typeof run.completedAt === "string"
+      && Number.isFinite(Date.parse(run.completedAt))
+    );
+  }
+
+  function normalizeScoreHistory(history = {}) {
+    const runs = history && history.version === SCORE_HISTORY_VERSION && Array.isArray(history.runs)
+      ? history.runs
+      : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: runs
+        .filter(validStoredScoreRun)
+        .map(normalizeScoreRun)
+        .slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function parseScoreHistory(serialized) {
+    try { return normalizeScoreHistory(JSON.parse(serialized)); }
+    catch (_) { return normalizeScoreHistory(); }
+  }
+
+  function parseStoredScoreHistory(serialized) {
+    try {
+      const history = JSON.parse(serialized);
+      if (
+        !history
+        || typeof history !== "object"
+        || history.version !== SCORE_HISTORY_VERSION
+        || !Array.isArray(history.runs)
+        || !history.runs.every(validStoredScoreRun)
+      ) return null;
+      return normalizeScoreHistory(history);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function serializeScoreHistory(history) {
+    return JSON.stringify(normalizeScoreHistory(history));
   }
 
   function evaluateAchievements(stats = {}) {
@@ -128,7 +210,10 @@
   return {
     ACHIEVEMENTS,
     METEOR_BOOST_DURATION,
+    SCORE_HISTORY_LIMIT,
+    SCORE_HISTORY_VERSION,
     applyMeteorHit,
+    appendScoreHistory,
     buildShareText,
     defaultPlayerMaxSpeed,
     evaluateAchievements,
@@ -136,6 +221,9 @@
     healthDiamondCount,
     meteorTravelSpeed,
     meteorWaveDue,
-    rarestAchievement
+    parseScoreHistory,
+    parseStoredScoreHistory,
+    rarestAchievement,
+    serializeScoreHistory
   };
 });

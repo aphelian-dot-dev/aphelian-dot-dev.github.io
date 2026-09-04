@@ -58,6 +58,7 @@
       grid-template-rows: auto 1fr auto;
       gap: clamp(18px, 3vw, 42px);
       padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+      overflow-y: auto;
       background: rgba(5, 5, 14, .46);
       transition: opacity 180ms ease, visibility 0s linear;
     }
@@ -194,6 +195,153 @@
 
     .control b { color: var(--paper); }
     .control span { color: var(--muted); }
+
+    .score-archive {
+      display: none;
+      margin: -5px 0 14px;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      font-family: "Courier New", monospace;
+    }
+
+    .overlay[data-state="title"] .score-archive { display: block; }
+
+    .score-archive-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 0 7px;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .score-archive-heading strong {
+      color: var(--ember);
+      font-size: 8px;
+    }
+
+    .score-consent,
+    .score-declined,
+    .score-history {
+      padding: 10px 0 11px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .score-consent[hidden],
+    .score-declined[hidden],
+    .score-history[hidden] { display: none; }
+
+    .score-ask {
+      margin: 0 0 5px;
+      color: var(--paper);
+      font: 700 11px/1.3 "Courier New", monospace;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .score-purpose,
+    .score-declined p,
+    .score-empty {
+      margin: 0;
+      color: var(--muted);
+      font: 600 9px/1.4 "Courier New", monospace;
+    }
+
+    .score-choice {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .archive-button {
+      min-height: 30px;
+      padding: 7px 10px;
+      border: 1px solid var(--rule);
+      border-radius: 0;
+      background: transparent;
+      color: var(--paper);
+      cursor: pointer;
+      font: 700 8px/1 "Courier New", monospace;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .archive-button.is-primary {
+      border-color: var(--paper);
+      background: var(--paper);
+      color: var(--void);
+    }
+
+    .archive-button:hover { border-color: var(--ember); }
+    .archive-button:focus-visible {
+      outline: 2px solid var(--ember);
+      outline-offset: 2px;
+    }
+
+    .score-history-list {
+      display: grid;
+      gap: 0;
+      max-height: 92px;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      scrollbar-color: var(--ember) rgba(241, 240, 232, .12);
+      scrollbar-width: thin;
+      list-style: none;
+    }
+
+    .score-history-item {
+      display: grid;
+      grid-template-columns: minmax(62px, 1fr) minmax(44px, .7fr) minmax(40px, .6fr) minmax(48px, .7fr);
+      gap: 5px;
+      padding: 6px 0;
+      border-top: 1px solid rgba(241, 240, 232, .18);
+      color: var(--muted);
+      font: 700 8px/1.2 "Courier New", monospace;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .score-history-item strong { color: var(--paper); }
+    .score-history-item .is-win { color: var(--ember); }
+    .score-history-item span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-cookie-details {
+      padding: 7px 0 8px;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font: 600 8px/1.42 "Courier New", monospace;
+    }
+
+    .score-cookie-details summary {
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .score-cookie-details p { margin: 7px 0 0; }
+    .score-cookie-details code {
+      color: var(--paper);
+      user-select: text;
+    }
+
+    .score-cookie-details kbd {
+      padding: 1px 3px;
+      border: 1px solid var(--rule);
+      color: var(--paper);
+      font: inherit;
+    }
 
     .rite-button {
       min-width: min(100%, 290px);
@@ -385,6 +533,8 @@
     .overlay[data-state="pause"] .briefing { max-width: 560px; }
 
     @media (min-width: 761px) {
+      .overlay[data-state="title"] .cover { min-height: min-content; }
+
       .overlay[data-state="pause"] h1 {
         font-size: clamp(56px, 9vw, 100px);
       }
@@ -531,6 +681,28 @@
     }
 
     @media (max-height: 420px) {
+      .overlay[data-state="title"] .controls { display: none; }
+      .overlay[data-state="title"] .score-archive { margin: 0; }
+      .overlay[data-state="title"] .score-archive-heading { padding: 4px 0; }
+      .overlay[data-state="title"] .score-consent,
+      .overlay[data-state="title"] .score-declined,
+      .overlay[data-state="title"] .score-history { padding: 5px 0; }
+      .overlay[data-state="title"] .score-ask { margin-bottom: 2px; font-size: 8px; }
+      .overlay[data-state="title"] .score-purpose,
+      .overlay[data-state="title"] .score-declined p,
+      .overlay[data-state="title"] .score-empty { font-size: 7px; line-height: 1.2; }
+      .overlay[data-state="title"] .score-choice { margin-top: 5px; }
+      .overlay[data-state="title"] .archive-button { min-height: 26px; padding: 5px 8px; font-size: 7px; }
+      .overlay[data-state="title"] .rite-button { min-height: 35px; padding: 8px 13px; }
+      .overlay[data-state="title"] .score-history-list { max-height: 54px; }
+      .overlay[data-state="title"] .score-history-item { padding: 3px 0; font-size: 6px; }
+      .overlay[data-state="title"] .score-cookie-details { padding: 4px 0; font-size: 7px; }
+      .overlay[data-state="title"] .score-cookie-details[open] {
+        max-height: 42vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
       .overlay[data-state="result"] {
         grid-template-rows: 1fr;
         gap: 0;
@@ -770,6 +942,42 @@
           <div class="control"><b>Reverse</b><span class="desktop-note">Right click / Shift</span><span class="touch-note">Tap left field</span></div>
         </div>
 
+        <section id="scoreArchive" class="score-archive" aria-labelledby="scoreArchiveHeading">
+          <div class="score-archive-heading">
+            <span id="scoreArchiveHeading">Rite archive</span>
+            <strong id="scoreArchiveStatus">Optional / off</strong>
+          </div>
+          <div id="scoreConsent" class="score-consent" role="group" aria-labelledby="scoreConsentQuestion" aria-describedby="scoreConsentPurpose">
+            <p id="scoreConsentQuestion" class="score-ask">Would you like Aphelian to remember your past scores?</p>
+            <p id="scoreConsentPurpose" class="score-purpose">If you choose yes, one first-party cookie keeps up to 10 completed rites on this browser. Its one-year Max-Age renews after each saved rite. It is used only for this score archive—no account, ads, analytics, or cross-site tracking.</p>
+            <div class="score-choice">
+              <button id="rememberScoresButton" class="archive-button is-primary" type="button">Remember scores</button>
+              <button id="declineScoresButton" class="archive-button" type="button">Not now</button>
+            </div>
+          </div>
+          <div id="scoreDeclined" class="score-declined" hidden>
+            <p id="scoreDeclinedCopy">No cookie was created. Score saving is off for this visit.</p>
+            <div class="score-choice">
+              <button id="reconsiderScoresButton" class="archive-button" type="button">Enable score archive</button>
+              <button id="removeBlockedScoreCookieButton" class="archive-button" type="button" hidden>Remove incompatible cookie</button>
+            </div>
+          </div>
+          <div id="scoreHistory" class="score-history" hidden>
+            <p id="scoreHistorySummary" class="score-empty">No past rites saved yet. Your next completed rite will appear here.</p>
+            <ol id="scoreHistoryList" class="score-history-list" aria-label="Saved rites, most recent first"></ol>
+            <div class="score-choice">
+              <button id="forgetScoresButton" class="archive-button" type="button">Forget saved scores</button>
+            </div>
+          </div>
+          <details id="scoreCookieDetails" class="score-cookie-details">
+            <summary>Cookie details + how to inspect</summary>
+            <p><code>aphelian_score_history</code> contains URL-encoded JSON: version plus each run's score, win/loss, best chain, rite seconds, and completion time. No name or unique identifier is stored. It is host-only, uses <code>Path=/</code> and <code>SameSite=Strict</code>, and adds <code>Secure</code> on HTTPS. Its one-year <code>Max-Age</code> renews after each saved rite; because renewal applies to the whole cookie, older entries may remain longer than one year while you continue saving. It cannot be <code>HttpOnly</code> because this page must read it to draw the archive.</p>
+            <p>Because it is a cookie, your browser includes it in requests to this site. Aphelian is a static game and contains no code that sends or uses it for anything beyond this on-page archive.</p>
+            <p>Archive changes use Web Locks so tabs cannot overwrite one another. If Web Locks are unavailable, the archive stays off. A malformed or unsupported-version same-name cookie is marked incompatible; it does not grant consent and will not be overwritten. Use <b>Remove incompatible cookie</b> when offered, or follow the manual steps below.</p>
+            <p>Firefox: <kbd>F12</kbd> → Storage → Cookies → this site. Chrome / Edge: <kbd>F12</kbd> → Application → Storage → Cookies → this site. To see decoded content in either browser's Console, run <code>window.__ORRERY__.scoreArchive()</code>.</p>
+          </details>
+        </section>
+
         <div class="field-guide" role="list" aria-label="Combat field reference">
           <div class="guide-entry" role="listitem"><b>Ward Moons</b><span>Three crescents. Contact damages Voidcraft; hold + release to strike.</span></div>
           <div class="guide-entry" role="listitem"><b>Lattice</b><span>At 36%, release an Aphelian Sweep: all three solid edges cut. Amber timing restores Focus.</span></div>
@@ -787,6 +995,7 @@
           <div class="achievement-heading">
             <span id="achievementHeading">Post-rite achievements</span>
             <strong id="achievementCount">0 / 6</strong>
+            <strong id="scoreSaveNotice" hidden>Score not saved</strong>
           </div>
           <ul id="achievementList" class="achievement-list"></ul>
         </section>
@@ -818,6 +1027,8 @@
   "use strict";
 
   const METEOR_BOOST_DURATION = 5;
+  const SCORE_HISTORY_LIMIT = 10;
+  const SCORE_HISTORY_VERSION = 1;
   const ACHIEVEMENTS = Object.freeze([
     Object.freeze({
       id: "no-damage",
@@ -866,6 +1077,86 @@
   function healthDiamondCount(health) {
     const value = Number.isFinite(Number(health)) ? Number(health) : 0;
     return Math.ceil(Math.max(0, Math.min(100, value)) / 20);
+  }
+
+  function nonNegativeFiniteNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 0;
+  }
+
+  function normalizeScoreRun(run = {}) {
+    const time = nonNegativeFiniteNumber(run.time);
+    return {
+      score: Math.floor(nonNegativeFiniteNumber(run.score)),
+      won: run.won === true,
+      bestChain: Math.floor(nonNegativeFiniteNumber(run.bestChain)),
+      time: time > Number.MAX_VALUE / 10 ? time : Math.round(time * 10) / 10,
+      completedAt: typeof run.completedAt === "string" ? run.completedAt : ""
+    };
+  }
+
+  function appendScoreHistory(history = {}, run = {}) {
+    const previousRuns = Array.isArray(history.runs) ? history.runs : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: [normalizeScoreRun(run), ...previousRuns.map(normalizeScoreRun)].slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function validStoredScoreNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  }
+
+  function validStoredScoreRun(run) {
+    return Boolean(
+      run
+      && typeof run === "object"
+      && !Array.isArray(run)
+      && validStoredScoreNumber(run.score)
+      && typeof run.won === "boolean"
+      && validStoredScoreNumber(run.bestChain)
+      && validStoredScoreNumber(run.time)
+      && typeof run.completedAt === "string"
+      && Number.isFinite(Date.parse(run.completedAt))
+    );
+  }
+
+  function normalizeScoreHistory(history = {}) {
+    const runs = history && history.version === SCORE_HISTORY_VERSION && Array.isArray(history.runs)
+      ? history.runs
+      : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: runs
+        .filter(validStoredScoreRun)
+        .map(normalizeScoreRun)
+        .slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function parseScoreHistory(serialized) {
+    try { return normalizeScoreHistory(JSON.parse(serialized)); }
+    catch (_) { return normalizeScoreHistory(); }
+  }
+
+  function parseStoredScoreHistory(serialized) {
+    try {
+      const history = JSON.parse(serialized);
+      if (
+        !history
+        || typeof history !== "object"
+        || history.version !== SCORE_HISTORY_VERSION
+        || !Array.isArray(history.runs)
+        || !history.runs.every(validStoredScoreRun)
+      ) return null;
+      return normalizeScoreHistory(history);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function serializeScoreHistory(history) {
+    return JSON.stringify(normalizeScoreHistory(history));
   }
 
   function evaluateAchievements(stats = {}) {
@@ -940,7 +1231,10 @@
   return {
     ACHIEVEMENTS,
     METEOR_BOOST_DURATION,
+    SCORE_HISTORY_LIMIT,
+    SCORE_HISTORY_VERSION,
     applyMeteorHit,
+    appendScoreHistory,
     buildShareText,
     defaultPlayerMaxSpeed,
     evaluateAchievements,
@@ -948,7 +1242,10 @@
     healthDiamondCount,
     meteorTravelSpeed,
     meteorWaveDue,
-    rarestAchievement
+    parseScoreHistory,
+    parseStoredScoreHistory,
+    rarestAchievement,
+    serializeScoreHistory
   };
 });
 </script>
@@ -977,6 +1274,10 @@
     const DIFFICULTY_RAMP_TIME = 90;
     const SPEED_BONUS_WINDOW = 90;
     const RITE_SCORE_WINDOW = 120;
+    const SCORE_COOKIE_NAME = "aphelian_score_history";
+    const SCORE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+    const SCORE_ARCHIVE_LOCK_NAME = "aphelian-score-archive";
+    const SCORE_COOKIE_PROPAGATION_MS = 100;
     const VITAL_ECHO_DURATION = .95;
     const FUEL_BOOST_DURATION = 2;
     const MIN_MOON_STRIKE_CHARGE = .001;
@@ -996,6 +1297,7 @@
     const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
     const overlay = document.getElementById("overlay");
     const eyebrow = document.getElementById("eyebrow");
+    const scoreSaveNotice = document.getElementById("scoreSaveNotice");
     const mainTitle = document.getElementById("mainTitle");
     const subtitle = document.getElementById("subtitle");
     const briefingCopy = document.getElementById("briefingCopy");
@@ -1007,6 +1309,19 @@
     const resultTime = document.getElementById("resultTime");
     const achievementList = document.getElementById("achievementList");
     const achievementCount = document.getElementById("achievementCount");
+    const scoreArchiveStatus = document.getElementById("scoreArchiveStatus");
+    const scoreConsent = document.getElementById("scoreConsent");
+    const scoreDeclined = document.getElementById("scoreDeclined");
+    const scoreDeclinedCopy = document.getElementById("scoreDeclinedCopy");
+    const scoreHistory = document.getElementById("scoreHistory");
+    const scoreHistorySummary = document.getElementById("scoreHistorySummary");
+    const scoreHistoryList = document.getElementById("scoreHistoryList");
+    const scoreCookieDetails = document.getElementById("scoreCookieDetails");
+    const rememberScoresButton = document.getElementById("rememberScoresButton");
+    const declineScoresButton = document.getElementById("declineScoresButton");
+    const reconsiderScoresButton = document.getElementById("reconsiderScoresButton");
+    const removeBlockedScoreCookieButton = document.getElementById("removeBlockedScoreCookieButton");
+    const forgetScoresButton = document.getElementById("forgetScoresButton");
     const announcer = document.getElementById("announcer");
 
     const backgroundLayer = document.createElement("canvas");
@@ -1031,7 +1346,11 @@
     let renderScale = 1;
     let lowFpsTime = 0;
     let shareAttempt = 0;
+    let scoreSaveAttempt = 0;
     let shareFeedbackTimer = 0;
+    let scoreArchiveState = initialScoreArchiveState();
+    let scoreArchiveConsentRevoked = false;
+    let scoreArchiveEnableAttempt = 0;
 
     const keys = new Set();
     const foldSources = new Set();
@@ -1044,7 +1363,6 @@
       time: 0,
       score: 0,
       shownScore: 0,
-      highScore: loadHighScore(),
       enemies: [],
       particles: [],
       waves: [],
@@ -1110,14 +1428,401 @@
       return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
     }
 
-    function loadHighScore() {
-      try { return Number(localStorage.getItem("aphelion-high-score")) || 0; }
-      catch (_) { return 0; }
+    function emptyScoreHistory() {
+      return { version: AphelionRules.SCORE_HISTORY_VERSION, runs: [] };
     }
 
-    function saveHighScore(value) {
-      try { localStorage.setItem("aphelion-high-score", String(value)); }
-      catch (_) { /* file/private contexts may disable storage */ }
+    function unavailableScoreArchive(reason = "storage-unavailable") {
+      return { enabled: false, available: false, blocked: false, reason, history: emptyScoreHistory() };
+    }
+
+    function incompatibleScoreArchive() {
+      return { enabled: false, available: true, blocked: true, reason: "incompatible", history: emptyScoreHistory() };
+    }
+
+    function scoreArchiveSynchronizationSupported() {
+      return Boolean(navigator.locks && typeof navigator.locks.request === "function");
+    }
+
+    function initialScoreArchiveState() {
+      if (!scoreCookiesSupported()) return unavailableScoreArchive();
+      if (!scoreArchiveSynchronizationSupported()) return unavailableScoreArchive("synchronization-unavailable");
+      return loadScoreArchive();
+    }
+
+    function loadScoreArchive() {
+      const prefix = `${SCORE_COOKIE_NAME}=`;
+      let serializedCookies;
+      try {
+        serializedCookies = document.cookie;
+      } catch (_) {
+        return unavailableScoreArchive();
+      }
+      const cookie = serializedCookies
+        .split(";")
+        .map(part => part.trim())
+        .find(part => part.startsWith(prefix));
+      if (!cookie) return { enabled: false, available: true, blocked: false, reason: null, history: emptyScoreHistory() };
+      try {
+        const history = AphelionRules.parseStoredScoreHistory(decodeURIComponent(cookie.slice(prefix.length)));
+        return history
+          ? { enabled: true, available: true, blocked: false, reason: null, history }
+          : incompatibleScoreArchive();
+      } catch (_) {
+        return incompatibleScoreArchive();
+      }
+    }
+
+    function scoreCookieSuffix(maxAge) {
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      return `; Max-Age=${maxAge}; Path=/; SameSite=Strict${secure}`;
+    }
+
+    function scoreCookiesSupported() {
+      return ["http:", "https:"].includes(location.protocol) && navigator.cookieEnabled;
+    }
+
+    function requestScoreArchiveLock(callback) {
+      return navigator.locks.request(
+        SCORE_ARCHIVE_LOCK_NAME,
+        { mode: "exclusive" },
+        callback
+      );
+    }
+
+    function waitForScoreCookiePropagation() {
+      // Firefox can publish document.cookie changes to another renderer asynchronously.
+      // Keep the exclusive lock through that handoff so the next tab reads the committed value.
+      return new Promise(resolve => setTimeout(resolve, SCORE_COOKIE_PROPAGATION_MS));
+    }
+
+    async function writeScoreCookieInsideLock(history) {
+      if (!scoreCookiesSupported()) return null;
+      const serialized = AphelionRules.serializeScoreHistory(history);
+      try {
+        document.cookie = `${SCORE_COOKIE_NAME}=${encodeURIComponent(serialized)}${scoreCookieSuffix(SCORE_COOKIE_MAX_AGE)}`;
+      } catch (_) {
+        return null;
+      }
+      await waitForScoreCookiePropagation();
+      const saved = loadScoreArchive();
+      if (!saved.enabled || AphelionRules.serializeScoreHistory(saved.history) !== serialized) return null;
+      return saved;
+    }
+
+    function formatArchiveDate(completedAt) {
+      const date = new Date(completedAt);
+      if (!Number.isFinite(date.getTime())) return "Unknown date";
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+    }
+
+    function renderScoreArchive() {
+      if (!scoreArchiveState.enabled && !scoreArchiveState.preview) {
+        if (scoreArchiveState.blocked) {
+          showIncompatibleScoreArchive(false);
+          return;
+        }
+        if (scoreArchiveState.reason === "synchronization-unavailable") {
+          showSynchronizationUnavailable(false);
+          return;
+        }
+        if (scoreArchiveState.available === false || !scoreCookiesSupported()) {
+          showScoreDeclined(
+            "Cookies are unavailable in this direct-file or private context. No data was saved. Serve this folder at http://localhost to try the archive.",
+            "Unavailable / nothing saved",
+            false,
+            false
+          );
+          return;
+        }
+        showScoreConsent();
+        return;
+      }
+      const runs = scoreArchiveState.history.runs;
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = true;
+      scoreHistory.hidden = false;
+      reconsiderScoresButton.hidden = false;
+      removeBlockedScoreCookieButton.hidden = true;
+      scoreArchiveStatus.textContent = scoreArchiveState.preview
+        ? "Preview / unsaved"
+        : `On / ${runs.length} saved`;
+      scoreHistorySummary.textContent = scoreArchiveState.preview
+        ? `Debug preview: ${runs.length} ${runs.length === 1 ? "rite" : "rites"} shown; nothing is saved.`
+        : runs.length
+          ? `${runs.length} completed ${runs.length === 1 ? "rite" : "rites"} saved on this browser. Most recent first.`
+          : "No past rites saved yet. Your next completed rite will appear here.";
+
+      const fragment = document.createDocumentFragment();
+      for (const run of runs) {
+        const item = document.createElement("li");
+        item.className = "score-history-item";
+        item.setAttribute(
+          "aria-label",
+          `${run.won ? "Rite complete" : "Rite failed"}. Score ${run.score}. Best chain ${run.bestChain}. Time ${AphelionRules.formatTime(run.time)}. Completed ${new Date(run.completedAt).toLocaleString()}.`
+        );
+
+        const score = document.createElement("span");
+        const scoreValue = document.createElement("strong");
+        scoreValue.textContent = padScore(run.score);
+        score.append(scoreValue, " score");
+
+        const outcome = document.createElement("span");
+        outcome.className = run.won ? "is-win" : "";
+        outcome.textContent = run.won ? "Dawn" : "Totality";
+
+        const time = document.createElement("span");
+        time.textContent = AphelionRules.formatTime(run.time);
+
+        const date = document.createElement("span");
+        date.textContent = formatArchiveDate(run.completedAt);
+
+        item.title = `Best chain ×${run.bestChain}`;
+        item.append(score, outcome, time, date);
+        fragment.append(item);
+      }
+      scoreHistoryList.replaceChildren(fragment);
+    }
+
+    function showScoreConsent() {
+      scoreConsent.hidden = false;
+      scoreDeclined.hidden = true;
+      scoreHistory.hidden = true;
+      reconsiderScoresButton.hidden = false;
+      removeBlockedScoreCookieButton.hidden = true;
+      scoreArchiveStatus.textContent = "Optional / off";
+    }
+
+    function showIncompatibleScoreArchive(moveFocus) {
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = false;
+      scoreHistory.hidden = true;
+      scoreHistoryList.replaceChildren();
+      scoreDeclinedCopy.textContent = "A same-name score cookie exists, but its format or version is incompatible. Aphelian will not read, save, or replace it. Inspect it under Cookie details, remove it here, or use browser site-data settings.";
+      scoreArchiveStatus.textContent = "Blocked / incompatible cookie";
+      reconsiderScoresButton.hidden = true;
+      removeBlockedScoreCookieButton.hidden = false;
+      if (moveFocus) removeBlockedScoreCookieButton.focus({ preventScroll: true });
+    }
+
+    function showSynchronizationUnavailable(moveFocus) {
+      scoreArchiveState = unavailableScoreArchive("synchronization-unavailable");
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "Safe cross-tab synchronization is unavailable because this browser does not provide usable Web Locks. The archive is off, Aphelian will not create or change the score cookie, and any existing cookie can be removed in browser site-data settings.",
+        "Synchronization unavailable / archive off",
+        false,
+        false
+      );
+      if (moveFocus) focusScoreCookieDetails();
+    }
+
+    function showScoreDeclined(message, status = "Off / nothing saved", canReconsider = true, moveFocus = true) {
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = false;
+      scoreHistory.hidden = true;
+      scoreDeclinedCopy.textContent = message;
+      scoreArchiveStatus.textContent = status;
+      reconsiderScoresButton.hidden = !canReconsider;
+      removeBlockedScoreCookieButton.hidden = true;
+      if (moveFocus) {
+        if (canReconsider) reconsiderScoresButton.focus({ preventScroll: true });
+        else focusScoreCookieDetails();
+      }
+    }
+
+    function focusScoreCookieDetails() {
+      const summary = scoreCookieDetails.querySelector("summary");
+      summary.focus({ preventScroll: true });
+    }
+
+    function declineScoreArchive() {
+      scoreArchiveEnableAttempt += 1;
+      declineScoresButton.disabled = false;
+      showScoreDeclined("No cookie was created. Score saving is off for this visit.");
+      announcer.textContent = "Score saving remains off. No cookie was created.";
+    }
+
+    async function enableScoreArchive() {
+      const enableAttempt = ++scoreArchiveEnableAttempt;
+      if (scoreArchiveConsentRevoked) {
+        showScoreDeclined(
+          "Score saving was revoked for this visit, and the cookie could not be removed. Aphelian will not read, display, update, or renew it. Remove it in DevTools or browser site-data settings.",
+          "Delete failed / cookie remains",
+          false
+        );
+        announcer.textContent = "Score saving remains revoked. Remove the score cookie in DevTools.";
+        return false;
+      }
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(true);
+        announcer.textContent = "Safe score archive synchronization is unavailable. No cookie was created or changed.";
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          if (enableAttempt !== scoreArchiveEnableAttempt) return { kind: "cancelled" };
+          declineScoresButton.disabled = true;
+          const current = loadScoreArchive();
+          if (current.available === false) return { kind: "unavailable", state: current };
+          if (current.blocked) return { kind: "blocked", state: current };
+          if (current.enabled) return { kind: "enabled", state: current, existing: true };
+          const saved = await writeScoreCookieInsideLock(emptyScoreHistory());
+          return saved
+            ? { kind: "enabled", state: saved, existing: false }
+            : { kind: "write-failed" };
+        });
+      } catch (_) {
+        if (enableAttempt !== scoreArchiveEnableAttempt) return false;
+        declineScoresButton.disabled = false;
+        showSynchronizationUnavailable(true);
+        announcer.textContent = "The score archive lock could not be acquired. No cookie was created or changed.";
+        return false;
+      }
+      if (enableAttempt !== scoreArchiveEnableAttempt || result.kind === "cancelled") return false;
+      declineScoresButton.disabled = false;
+      if (scoreArchiveConsentRevoked) return false;
+      if (result.kind === "blocked") {
+        scoreArchiveState = result.state;
+        showIncompatibleScoreArchive(true);
+        announcer.textContent = "An incompatible score cookie was preserved. Inspect or remove it before enabling the archive.";
+        return false;
+      }
+      if (result.kind === "enabled") {
+        scoreArchiveState = result.state;
+        renderScoreArchive();
+        announcer.textContent = result.existing
+          ? "Score archive was already enabled in another tab. Its saved rites were preserved."
+          : "Score archive enabled. One first-party cookie was created.";
+        forgetScoresButton.focus({ preventScroll: true });
+        return true;
+      }
+      scoreArchiveState = result.state || unavailableScoreArchive("write-failed");
+      showScoreDeclined(
+        "The browser blocked the score cookie. The archive remains off and no data was saved. You can inspect cookie controls under Cookie details.",
+        "Unavailable / nothing saved",
+        false
+      );
+      announcer.textContent = "Score cookie unavailable. No data was saved.";
+      return false;
+    }
+
+    async function recordCompletedRun(won) {
+      if (scoreArchiveConsentRevoked || !scoreArchiveState.enabled) return;
+      const completedRun = {
+        score: game.score,
+        won,
+        bestChain: game.bestChain,
+        time: game.time,
+        completedAt: new Date().toISOString()
+      };
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(false);
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          if (scoreArchiveConsentRevoked) return { kind: "revoked" };
+          const current = loadScoreArchive();
+          if (!current.enabled) return { kind: "disabled", state: current };
+          const history = AphelionRules.appendScoreHistory(current.history, completedRun);
+          const saved = await writeScoreCookieInsideLock(history);
+          return saved ? { kind: "saved", state: saved } : { kind: "write-failed" };
+        });
+      } catch (_) {
+        if (scoreArchiveConsentRevoked) return;
+        showSynchronizationUnavailable(false);
+        return false;
+      }
+      if (scoreArchiveConsentRevoked || result.kind === "revoked") return;
+      if (result.kind === "saved") {
+        scoreArchiveState = result.state;
+        return true;
+      }
+      if (result.kind === "disabled") {
+        scoreArchiveState = result.state;
+        renderScoreArchive();
+        return result.state.available === false || result.state.blocked ? false : undefined;
+      }
+      scoreArchiveState = unavailableScoreArchive("write-failed");
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "This completed rite was not saved because the browser blocked the cookie update. The existing archive may remain; remove it in DevTools or browser site-data settings.",
+        "Save failed / archive off",
+        false,
+        false
+      );
+      return false;
+    }
+
+    async function forgetScoreArchive() {
+      scoreArchiveConsentRevoked = true;
+      scoreArchiveState = {
+        enabled: false,
+        available: true,
+        blocked: false,
+        reason: "revoked",
+        history: emptyScoreHistory()
+      };
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "Score saving is off. Aphelian is deleting the score cookie now.",
+        "Deleting / archive off",
+        false,
+        false
+      );
+      focusScoreCookieDetails();
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(false);
+        announcer.textContent = "The cookie was not changed because safe synchronization is unavailable. Remove it in browser site-data settings.";
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          const current = loadScoreArchive();
+          if (current.available === false) return { kind: "unverified" };
+          if (!current.enabled && !current.blocked) return { kind: "deleted" };
+          try {
+            document.cookie = `${SCORE_COOKIE_NAME}=${scoreCookieSuffix(0)}`;
+          } catch (_) {
+            return { kind: "delete-failed" };
+          }
+          await waitForScoreCookiePropagation();
+          const remaining = loadScoreArchive();
+          if (remaining.available === false) return { kind: "unverified" };
+          return remaining.enabled || remaining.blocked
+            ? { kind: "delete-failed" }
+            : { kind: "deleted" };
+        });
+      } catch (_) {
+        result = { kind: "lock-failed" };
+      }
+      if (result.kind !== "deleted") {
+        const unverified = result.kind === "unverified" || result.kind === "lock-failed";
+        scoreArchiveState = unavailableScoreArchive(unverified ? "deletion-unverified" : "deletion-failed");
+        showScoreDeclined(
+          unverified
+            ? "Aphelian could not confirm deletion. Score saving remains off for this visit, and it will not read, display, update, or renew the cookie. Remove it in DevTools or browser site-data settings."
+            : "The browser did not delete the score cookie. Score saving remains off for this visit, and Aphelian will not read, display, update, or renew the cookie. Remove it in DevTools or browser site-data settings.",
+          unverified ? "Delete unverified / cookie may remain" : "Delete failed / cookie remains",
+          false,
+          false
+        );
+        announcer.textContent = unverified
+          ? "Cookie deletion could not be confirmed. Score saving is off; remove the score cookie in DevTools."
+          : "The browser did not delete the score cookie. Score saving is off; remove the cookie in DevTools.";
+        return false;
+      }
+      scoreArchiveConsentRevoked = false;
+      scoreArchiveState = { enabled: false, available: true, blocked: false, reason: null, history: emptyScoreHistory() };
+      scoreHistoryList.replaceChildren();
+      showScoreConsent();
+      announcer.textContent = "Saved scores deleted. Score saving is off.";
+      rememberScoresButton.focus({ preventScroll: true });
+      return true;
     }
 
     function resize() {
@@ -1364,6 +2069,7 @@
 
     function startGame() {
       shareAttempt += 1;
+      scoreSaveAttempt += 1;
       resetShareFeedback();
       initAudio();
       resumeAudio();
@@ -1404,13 +2110,41 @@
       clearInputs(true);
       game.mode = won ? "won" : "lost";
       game.endReason = reason;
-      game.highScore = Math.max(game.highScore, Math.floor(game.score));
-      saveHighScore(game.highScore);
+      const scoreSaveResult = recordCompletedRun(won);
+      const currentScoreSaveAttempt = scoreSaveAttempt;
       game.achievements = renderAchievements(won);
       setAudioActive(false);
       if (won) audioWin(); else audioLose();
       showOverlay("result", won, reason);
-      announcer.textContent = won ? `Rite complete. Score ${Math.floor(game.score)}.` : `The rite failed. ${reason}. Score ${Math.floor(game.score)}.`;
+      const resultAnnouncement = won
+        ? `Rite complete. Score ${Math.floor(game.score)}.`
+        : `The rite failed. ${reason}. Score ${Math.floor(game.score)}.`;
+      announcer.textContent = resultAnnouncement;
+      return Promise.resolve(scoreSaveResult).then(result => {
+        if (currentScoreSaveAttempt !== scoreSaveAttempt) return result;
+        if (result === false) {
+          achievementCount.hidden = true;
+          scoreSaveNotice.hidden = false;
+          announcer.textContent = `${resultAnnouncement} The score was not saved because the archive cookie could not be updated.`;
+        }
+        return result;
+      }, error => {
+        console.error("Score archive update failed", error);
+        if (currentScoreSaveAttempt === scoreSaveAttempt) {
+          scoreArchiveState = unavailableScoreArchive("unexpected-error");
+          scoreHistoryList.replaceChildren();
+          showScoreDeclined(
+            "This completed rite was not saved because the score archive failed unexpectedly. The existing cookie may remain; remove it in DevTools or browser site-data settings.",
+            "Save failed / archive off",
+            false,
+            false
+          );
+          achievementCount.hidden = true;
+          scoreSaveNotice.hidden = false;
+          announcer.textContent = `${resultAnnouncement} The score was not saved because the archive failed unexpectedly.`;
+        }
+        return false;
+      });
     }
 
     function renderAchievements(won) {
@@ -1531,6 +2265,8 @@
 
     function showOverlay(kind, won = false, reason = "") {
       overlay.dataset.state = kind;
+      achievementCount.hidden = false;
+      scoreSaveNotice.hidden = true;
       if (kind === "pause") {
         eyebrow.textContent = "Combat field reference";
         mainTitle.textContent = "STILLNESS";
@@ -3694,7 +4430,7 @@
 
     window.addEventListener("keydown", event => {
       const code = event.code;
-      if (event.target instanceof HTMLButtonElement && (code === "Enter" || code === "Space")) return;
+      if (event.target instanceof HTMLElement && event.target.matches("button, summary") && (code === "Enter" || code === "Space")) return;
       const handled = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "ShiftLeft", "ShiftRight", "KeyW", "KeyA", "KeyS", "KeyD", "KeyP", "Escape", "Enter", "KeyR", "KeyM"].includes(code);
       if (handled) event.preventDefault();
 
@@ -3735,6 +4471,15 @@
       else startGame();
     });
     shareButton.addEventListener("click", shareRun);
+    rememberScoresButton.addEventListener("click", enableScoreArchive);
+    declineScoresButton.addEventListener("click", declineScoreArchive);
+    reconsiderScoresButton.addEventListener("click", () => {
+      showScoreConsent();
+      announcer.textContent = "Choose whether Aphelian may remember completed scores.";
+      rememberScoresButton.focus({ preventScroll: true });
+    });
+    forgetScoresButton.addEventListener("click", forgetScoreArchive);
+    removeBlockedScoreCookieButton.addEventListener("click", forgetScoreArchive);
     soundButton.addEventListener("click", toggleSound);
     window.addEventListener("resize", () => {
       renderScale = 1;
@@ -3746,6 +4491,13 @@
     // A read-only diagnostic snapshot is always available. Mutating verification
     // hooks exist only when the file is opened with ?debug=1.
     const debugApi = {
+      scoreArchive: () => ({
+        name: SCORE_COOKIE_NAME,
+        enabled: scoreArchiveState.enabled,
+        blocked: scoreArchiveState.blocked === true,
+        reason: scoreArchiveState.reason || null,
+        history: AphelionRules.parseScoreHistory(AphelionRules.serializeScoreHistory(scoreArchiveState.history))
+      }),
       snapshot: () => ({
         mode: game.mode,
         time: Number(game.time.toFixed(2)),
@@ -3775,6 +4527,15 @@
       })
     };
     if (new URLSearchParams(location.search).has("debug")) Object.assign(debugApi, {
+      setScoreHistory: history => {
+        scoreArchiveState = {
+          enabled: false,
+          preview: true,
+          history: AphelionRules.parseScoreHistory(AphelionRules.serializeScoreHistory(history))
+        };
+        renderScoreArchive();
+        return debugApi.scoreArchive();
+      },
       start: startGame,
       spawnMeteor: () => {
         if (game.mode !== "playing") return null;
@@ -3802,7 +4563,10 @@
         return true;
       },
       finish: won => {
-        if (game.mode === "playing") endGame(Boolean(won), won ? "THE BLACK SUN IS SEALED" : "VITAL LIGHT EXTINGUISHED");
+        if (game.mode === "playing") {
+          return endGame(Boolean(won), won ? "THE BLACK SUN IS SEALED" : "VITAL LIGHT EXTINGUISHED");
+        }
+        return Promise.resolve();
       },
       defeatBoss: () => {
         if (game.mode === "playing" && game.boss && !game.boss.dead) {
@@ -3819,6 +4583,7 @@
     game.player = createPlayer();
     calculateOrbs(game.player);
     updateSoundButton();
+    renderScoreArchive();
     requestAnimationFrame(frame);
   })();
   </script>

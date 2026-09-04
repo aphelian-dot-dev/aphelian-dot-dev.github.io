@@ -91,3 +91,52 @@ test('achievement names get a full-width column on narrow portrait screens', () 
   assert.match(html, /@media \(max-width: 420px\)/);
   assert.match(html, /\.overlay\[data-state="result"\] \.achievement-list \{ grid-template-columns: 1fr; \}/);
 });
+
+test('score archive consent and history expose accessible labels', () => {
+  assert.match(
+    html,
+    /id="scoreConsent" class="score-consent" role="group" aria-labelledby="scoreConsentQuestion" aria-describedby="scoreConsentPurpose"/
+  );
+  assert.match(html, /id="scoreConsentQuestion" class="score-ask"/);
+  assert.match(html, /id="scoreConsentPurpose" class="score-purpose"/);
+  assert.match(html, /id="scoreHistoryList" class="score-history-list" aria-label="Saved rites, most recent first"/);
+});
+
+test('score archive is consent-gated and uses only its disclosed cookie', () => {
+  assert.match(html, /const SCORE_COOKIE_NAME = "aphelian_score_history";/);
+  assert.match(html, /const SCORE_COOKIE_MAX_AGE = 60 \* 60 \* 24 \* 365;/);
+  assert.match(html, /Path=\/; SameSite=Strict/);
+  assert.match(html, /location\.protocol === "https:" \? "; Secure" : ""/);
+  assert.match(html, /rememberScoresButton\.addEventListener\("click", enableScoreArchive\)/);
+  assert.match(html, /const scoreSaveResult = recordCompletedRun\(won\);/);
+  assert.match(html, /forgetScoresButton\.addEventListener\("click", forgetScoreArchive\)/);
+  assert.doesNotMatch(html, /localStorage|sessionStorage/);
+  assert.match(html, /No name or unique identifier is stored\./);
+  assert.match(html, /browser includes it in requests to this site/);
+});
+
+test('score archive clearly discloses rolling one-year renewal', () => {
+  assert.match(
+    html,
+    /id="scoreConsentPurpose"[^>]*>[^<]*one-year Max-Age renews after each saved rite/i
+  );
+  assert.match(html, /older entries may remain longer than one year while you continue saving/i);
+});
+
+test('cookie details disclose synchronization and incompatible-cookie controls', () => {
+  const details = html.match(/<details id="scoreCookieDetails"[\s\S]*?<\/details>/);
+  assert.ok(details, 'expected cookie details disclosure');
+  assert.match(details[0], /Web Locks/i);
+  assert.match(details[0], /malformed or unsupported-version/i);
+  assert.match(details[0], /will not[^<]*overwrit/i);
+  assert.match(html, /id="removeBlockedScoreCookieButton"[^>]*>Remove incompatible cookie<\/button>/);
+});
+
+test('cookie-derived score rows use text-only DOM construction', () => {
+  const renderer = html.match(/function renderScoreArchive\(\) \{([\s\S]*?)\n    function showScoreConsent\(\)/);
+  assert.ok(renderer, 'expected the score archive renderer');
+  assert.match(renderer[1], /document\.createElement\("li"\)/);
+  assert.match(renderer[1], /\.textContent =/);
+  assert.match(renderer[1], /scoreHistoryList\.replaceChildren\(fragment\)/);
+  assert.doesNotMatch(renderer[1], /innerHTML|outerHTML|insertAdjacentHTML|document\.write/);
+});
