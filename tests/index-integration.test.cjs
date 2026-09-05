@@ -82,7 +82,8 @@ test('result screen exposes a share action with native and clipboard paths', () 
   assert.match(html, /\.overlay\[data-state="result"\] \.share-button/);
   assert.match(html, /function shareRun\(\)/);
   assert.match(html, /AphelionRules\.buildShareText\(/);
-  assert.match(html, /navigator\.share/);
+  assert.match(html, /const shareUrl = "https:\/\/aphelian\.dev\/";/);
+  assert.match(html, /navigator\.share\(\{ title: "APHELIAN \/\/ THE LAST ORRERY", text: nativeText, url: shareUrl \}\)/);
   assert.match(html, /navigator\.clipboard\.writeText/);
   assert.match(html, /shareButton\.addEventListener\("click", shareRun\)/);
 });

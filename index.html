@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05050e">
   <meta name="color-scheme" content="dark">
+  <meta name="description" content="Command three Ward Moons. Seal the Black Sun in APHELIAN — The Last Orrery.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aphelian.dev/">
+  <meta property="og:site_name" content="Aphelian">
+  <meta property="og:title" content="APHELIAN — The Last Orrery">
+  <meta property="og:description" content="Command three Ward Moons. Seal the Black Sun.">
+  <meta property="og:image" content="https://aphelian.dev/social-preview.png">
+  <meta property="og:image:secure_url" content="https://aphelian.dev/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The Little Orrery emblem beside the title APHELIAN — The Last Orrery">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="APHELIAN — The Last Orrery">
+  <meta name="twitter:description" content="Command three Ward Moons. Seal the Black Sun.">
+  <meta name="twitter:image" content="https://aphelian.dev/social-preview.png">
   <title>APHELIAN — The Last Orrery</title>
   <style>
     :root {
@@ -2718,8 +2738,13 @@ window.createOrrery3D = function createOrrery3D(canvas) {
         time: game.time,
         achievements: game.achievements
       });
+      const shareUrl = "https://aphelian.dev/";
+      const shareUrlText = shareUrl.replace(/\/$/, "");
+      const nativeText = text.endsWith(shareUrlText)
+        ? text.slice(0, -shareUrlText.length).trimEnd()
+        : text;
       if (typeof navigator.share === "function") {
-        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text })
+        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text: nativeText, url: shareUrl })
           .then(() => showShareFeedback("Run shared", attempt))
           .catch(error => {
             if (error && error.name === "AbortError") return;

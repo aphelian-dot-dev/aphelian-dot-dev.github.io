@@ -2029,6 +2029,43 @@ class ResultScreenBrowserTests(unittest.TestCase):
         self.assertEqual(1, state["renderedRows"], json.dumps(state, indent=2))
         self.assertIn("1 completed rite saved", state["summary"])
 
+    def test_native_share_passes_the_site_as_a_url_for_link_previews(self):
+        wrapper = (
+            "<!doctype html><style>html,body{margin:0}iframe{display:block;border:0}</style>"
+            f'<iframe id="gameFrame" width="900" height="700" '
+            f'src="{self.base_url}/index.html?debug=1"></iframe>'
+        )
+        self.driver.get("data:text/html;charset=utf-8," + quote(wrapper))
+        frame = self.driver.find_element("id", "gameFrame")
+        self.driver.switch_to.frame(frame)
+        WebDriverWait(self.driver, 10).until(
+            lambda driver: driver.execute_script(
+                'return document.readyState === "complete" && typeof window.__ORRERY__ === "object"'
+            )
+        )
+        self.driver.execute_script(
+            """
+            window.__sharePayload = null;
+            Object.defineProperty(navigator, 'share', {
+              configurable: true,
+              value: payload => {
+                window.__sharePayload = payload;
+                return Promise.resolve();
+              }
+            });
+            window.__ORRERY__.start();
+            window.__ORRERY__.finish(true);
+            """
+        )
+        self.driver.find_element("id", "shareButton").click()
+        payload = WebDriverWait(self.driver, 5).until(
+            lambda driver: driver.execute_script("return window.__sharePayload")
+        )
+        self.assertEqual("https://aphelian.dev/", payload["url"])
+        self.assertEqual("APHELIAN // THE LAST ORRERY", payload["title"])
+        self.assertNotIn("https://aphelian.dev", payload["text"])
+        self.driver.switch_to.default_content()
+
     def test_share_feedback_resets_before_the_next_result(self):
         wrapper = (
             "<!doctype html><style>html,body{margin:0}iframe{display:block;border:0}</style>"
