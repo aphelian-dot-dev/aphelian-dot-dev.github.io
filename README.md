@@ -1,10 +1,10 @@
 # APHELIAN — The Last Orrery
 
-Local **2D / 3D edition**, derived from upstream commit `0bb8be2bbe4b0ac2bb6ab9fcb1c03aeebcf4acbf` of [aphelian-dot-dev/aphelian-dot-dev.github.io](https://github.com/aphelian-dot-dev/aphelian-dot-dev.github.io).
+Source for [aphelian.dev](https://aphelian.dev/), a standalone canvas action game with selectable **2D / 3D** presentation, hosted with GitHub Pages.
 
-## Open on Bazzite
+## Play offline
 
-Open **`/home/zach/Transfers/aphelian-3d/index.html`** in Firefox or Chrome. All code, including Three.js, is embedded: no installation, internet connection, CDN, or local server is needed to play. A Flatpak file picker can expose just this one HTML file and it still works. If you opened an earlier copy through a document portal, close that tab and open the file again.
+Download the repository and open **`index.html`** in Firefox or Chrome. All code, including Three.js, is embedded: no installation, internet connection, CDN, or local server is needed to play. A Flatpak file picker can expose just this one HTML file and it still works. If you opened an earlier copy through a document portal, close that tab and open the file again.
 
 This is a genuine WebGL 3D presentation with a perspective camera, lit solid models, a raised arena, moon shadows, volumetric Black Sun rings, projected aim, and 3D particles. **Combat remains on a single plane** to preserve the original movement and collision rules; it is not a free-flight or first-person redesign. Enemies still enter from beyond the arena edge.
 
@@ -18,7 +18,7 @@ Shake is **impact-only**: releasing an attack into empty space, reversing withou
 
 The result screen includes eight achievements. **DAWN IN THREE DIMENSIONS — EASY** is earned by sealing the Black Sun and reaching DAWN in 3D mode. A 2D win or any loss does not unlock it; the chosen view cannot be switched during a rite. Like the other achievements, it is evaluated per run and can appear in the existing rarest-achievement share text. This adds no storage or changes to score-archive consent.
 
-The separate 2D playtest and public website are not replaced. The archive remains off in direct-file mode. WebGL is needed only for 3D: if unavailable, the game explains the fallback and remains playable in 2D. Context loss pauses an active 3D run until manual resumption after recovery, but does not interrupt a 2D run.
+The archive remains off in direct-file mode. WebGL is needed only for 3D: if unavailable, the game explains the fallback and remains playable in 2D. Context loss pauses an active 3D run until manual resumption after recovery, but does not interrupt a 2D run.
 
 ## Rebuilding this edition
 
@@ -72,14 +72,13 @@ Mobile regression checks: `uv run --with playwright python tests/mobile-controls
 
 ## Local preview
 
-For the optional score archive, serve this folder on loopback only, then open `http://127.0.0.1:8000` on Bazzite:
+For the optional score archive, run this command from the repository root to serve it on loopback only, then open `http://127.0.0.1:8000` in your browser:
 
 ```sh
-cd /home/zach/Transfers/aphelian-3d
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
-Stop with Ctrl+C. No service is installed. Cookies are shared across ports on the same hostname; use a separate browser profile if you want this experimental edition's archive isolated from another localhost game.
+Stop with Ctrl+C. No service is installed. Cookies are shared across ports on the same hostname; use a separate browser profile if you want the score archive isolated from another localhost game.
 
 ## Optional score archive
 
