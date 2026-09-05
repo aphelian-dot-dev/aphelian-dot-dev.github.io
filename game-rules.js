@@ -5,6 +5,19 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
   "use strict";
 
+  const NORMAL_ATTACK = Object.freeze({ movement: 1, radius: 1, spin: 1, damage: 1 });
+  const OVERHEATED_ATTACK = Object.freeze({ movement: .95, radius: .9, spin: .75, damage: .5 });
+  function isOverheatedCharge(charge) {
+    return Number.isFinite(charge) && charge >= 1;
+  }
+  function attackModifiers(player = {}) {
+    return player.overheated === true && player.burst > 0 ? OVERHEATED_ATTACK : NORMAL_ATTACK;
+  }
+  function attackCharge(player = {}) {
+    const maximum = player.overheated === true && player.burst > 0 ? .96 : 1;
+    return Math.max(0, Math.min(maximum, Number(player.burstCharge) || 0));
+  }
+
   const METEOR_BOOST_DURATION = 5;
   const SCORE_HISTORY_LIMIT = 10;
   const SCORE_HISTORY_VERSION = 1;
@@ -55,6 +68,13 @@
       id: "no-reversal",
       title: "NEVER REVERSED COURSE",
       description: "Complete the run without Retrograde.",
+      difficulty: "EASY",
+      rank: 1
+    }),
+    Object.freeze({
+      id: "dawn-3d",
+      title: "DAWN IN THREE DIMENSIONS",
+      description: "Reach DAWN by sealing the Black Sun in 3D mode.",
       difficulty: "EASY",
       rank: 1
     })
@@ -156,7 +176,8 @@
         && stats.healed !== true,
       "chain-20": Number(stats.bestChain) >= 20,
       "score-100k": Number(stats.score) >= 100000,
-      "no-reversal": (Number(stats.reversals) || 0) === 0
+      "no-reversal": (Number(stats.reversals) || 0) === 0,
+      "dawn-3d": stats.won === true && stats.view === "3d"
     };
     return ACHIEVEMENTS.map(achievement => ({
       ...achievement,
@@ -216,6 +237,9 @@
   }
 
   return {
+    isOverheatedCharge,
+    attackModifiers,
+    attackCharge,
     ACHIEVEMENTS,
     METEOR_BOOST_DURATION,
     SCORE_HISTORY_LIMIT,

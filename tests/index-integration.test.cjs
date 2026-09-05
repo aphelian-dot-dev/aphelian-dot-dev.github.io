@@ -64,10 +64,11 @@ test('player Vital Light is rendered as five diamond health slivers', () => {
 
 test('post-run achievement panel evaluates all tracked run conditions', () => {
   assert.match(html, /id="achievementList"/);
-  assert.match(html, /id="achievementCount">0 \/ 7<\/strong>/);
+  assert.match(html, /id="achievementCount">0 \/ 8<\/strong>/);
   const renderer = html.match(/function renderAchievements\(won\) \{([\s\S]*?)\n    function shareRun\(\)/);
   assert.ok(renderer, 'expected the post-run achievement renderer');
   assert.match(renderer[1], /AphelionRules\.evaluateAchievements\(/);
+  assert.match(renderer[1], /view: selectedView/);
   assert.match(renderer[1], /game\.runStats\.damageTaken/);
   assert.match(renderer[1], /game\.runStats\.moved/);
   assert.match(renderer[1], /game\.runStats\.healed/);

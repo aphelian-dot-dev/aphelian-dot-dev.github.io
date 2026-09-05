@@ -1,0 +1,157 @@
+[
+  {
+    "function": "createPlayer",
+    "old": "        burstCharge: 0,",
+    "new": "        burstCharge: 0,\n        overheated: false,"
+  },
+  {
+    "function": "updatePlayer",
+    "old": "      const movementBoost = p.fuelTime > 0 ? 1.5 : 1;",
+    "new": "      const movementBoost = (p.fuelTime > 0 ? 1.5 : 1) * AphelionRules.attackModifiers(p).movement;"
+  },
+  {
+    "function": "updatePlayer",
+    "old": "      p.burst = Math.max(0, p.burst - dt);",
+    "new": "      p.burst = Math.max(0, p.burst - dt);\n      if (p.burst <= 0) p.overheated = false;"
+  },
+  {
+    "function": "updatePlayer",
+    "old": "        p.charge = Math.min(1.04, p.charge + .67 * dt);",
+    "new": "        p.charge = Math.min(1, p.charge + .67 * dt);"
+  },
+  {
+    "function": "updatePlayer",
+    "old": "        if (p.focus <= .01 || p.charge >= 1.035) {",
+    "new": "        if (p.focus <= .01 || AphelionRules.isOverheatedCharge(p.charge)) {"
+  },
+  {
+    "function": "updatePlayer",
+    "old": "      p.angle += p.dir * angularSpeed * dt;",
+    "new": "      p.angle += p.dir * angularSpeed * AphelionRules.attackModifiers(p).spin * dt;"
+  },
+  {
+    "function": "calculateOrbs",
+    "old": "      const a = p.radius;\n      const b = p.radius * .64;",
+    "new": "      const a = p.radius * AphelionRules.attackModifiers(p).radius;\n      const b = a * .64;"
+  },
+  {
+    "function": "calculateOrbs",
+    "old": "hot: p.burst > 0 ? 1 : (p.folding ? p.charge * .5 : 0)",
+    "new": "hot: p.burst > 0 ? (p.overheated ? .5 : 1) : (p.folding ? p.charge * .5 : 0)"
+  },
+  {
+    "function": "beginFold",
+    "old": "        p.folding = true;\n        p.charge = 0;",
+    "new": "        p.folding = true;\n        p.charge = 0;\n        p.overheated = false;"
+  },
+  {
+    "function": "castOrbit",
+    "old": "      const charge = p.charge;",
+    "new": "      const charge = Math.min(1, p.charge);\n      p.overheated = AphelionRules.isOverheatedCharge(charge);"
+  },
+  {
+    "function": "castOrbit",
+    "old": "      p.burstCharge = charge;",
+    "new": "      p.burstCharge = charge;\n      p.vx *= AphelionRules.attackModifiers(p).movement;\n      p.vy *= AphelionRules.attackModifiers(p).movement;\n      if (p.overheated) announcer.textContent = \"Overheated. Blue Lattice: reduced speed, reach, rotation and damage until this burst cools.\";"
+  },
+  {
+    "function": "retrograde",
+    "old": "hitEnemy(enemy, enemy.boss ? .7 : 1.15, orb.x, orb.y, \"retrograde\");",
+    "new": "hitEnemy(enemy, (enemy.boss ? .7 : 1.15) * AphelionRules.attackModifiers(p).damage, orb.x, orb.y, \"retrograde\");"
+  },
+  {
+    "function": "resolveCombat",
+    "old": "const strikeCharge = hot ? clamp(p.burstCharge, 0, 1) : 0;",
+    "new": "const strikeCharge = hot ? AphelionRules.attackCharge(p) : 0;"
+  },
+  {
+    "function": "resolveCombat",
+    "old": "const damage = hot ? 1.05 + strikeCharge * 2.65 : .82;",
+    "new": "const damage = (hot ? 1.05 + strikeCharge * 2.65 : .82) * AphelionRules.attackModifiers(p).damage;"
+  },
+  {
+    "function": "resolveCombat",
+    "old": "const latticeCharge = releaseLatticeActive ? p.burstCharge : p.charge;",
+    "new": "const latticeCharge = releaseLatticeActive ? AphelionRules.attackCharge(p) : p.charge;"
+  },
+  {
+    "function": "resolveCombat",
+    "old": "const damage = releaseLatticeActive ? .95 + latticeCharge * 1.15 : .42 + latticeCharge * .42;",
+    "new": "const damage = (releaseLatticeActive ? .95 + latticeCharge * 1.15 : .42 + latticeCharge * .42) * AphelionRules.attackModifiers(p).damage;"
+  },
+  {
+    "function": "drawOrbitalSystem",
+    "old": "      // Trails sit below the geometry like long-exposure ink.",
+    "new": "      const visualRadius = p.radius * AphelionRules.attackModifiers(p).radius;\n      // Trails sit below the geometry like long-exposure ink."
+  },
+  {
+    "function": "drawOrbitalSystem",
+    "old": "ctx.ellipse(0, 0, p.radius, p.radius * .64, 0, 0, TAU);",
+    "new": "ctx.ellipse(0, 0, visualRadius, visualRadius * .64, 0, 0, TAU);"
+  },
+  {
+    "function": "drawOrbitalSystem",
+    "old": "const ex = Math.cos(a) * p.radius;\n        const ey = Math.sin(a) * p.radius * .64;",
+    "new": "const ex = Math.cos(a) * visualRadius;\n        const ey = Math.sin(a) * visualRadius * .64;"
+  },
+  {
+    "function": "drawOrbitalSystem",
+    "old": "drawLattice(p.orbs, latticeStrength, p.burst > 0, foldingLatticeLive || releaseLatticeLive);",
+    "new": "drawLattice(p.orbs, latticeStrength, p.burst > 0, foldingLatticeLive || releaseLatticeLive, p.overheated && p.burst > 0);"
+  },
+  {
+    "function": "drawOrbitalSystem",
+    "old": "drawOrb(orb, i, p.burst > 0 ? 1 : p.folding ? p.charge : .12)",
+    "new": "drawOrb(orb, i, p.burst > 0 ? (p.overheated ? .5 : 1) : p.folding ? p.charge : .12)"
+  },
+  {
+    "function": "drawLattice",
+    "old": "function drawLattice(orbs, strength, hot, live = false)",
+    "new": "function drawLattice(orbs, strength, hot, live = false, overheated = false)"
+  },
+  {
+    "function": "drawLattice",
+    "old": "ctx.strokeStyle = hot ? COLORS.ember : COLORS.cobalt;",
+    "new": "ctx.strokeStyle = overheated ? COLORS.cobaltSoft : hot ? COLORS.ember : COLORS.cobalt;"
+  },
+  {
+    "function": "drawLattice",
+    "old": "ctx.strokeStyle = COLORS.paper;",
+    "new": "ctx.strokeStyle = overheated ? COLORS.cobaltSoft : COLORS.paper;"
+  },
+  {
+    "function": "drawHUD",
+    "old": "      const focusLabel = narrowHud",
+    "new": "      ctx.fillStyle = p.overheated && p.burst > 0 ? COLORS.paper : COLORS.muted;\n      const focusLabel = p.overheated && p.burst > 0\n        ? (narrowHud ? \"OVERHEATED\" : \"OVERHEATED / BLUE LATTICE\")\n        : narrowHud"
+  },
+  {
+    "function": "drawHUD",
+    "old": "      ctx.fillStyle = COLORS.paper;\n      ctx.fillRect(fx, fy, focusW * p.focus / 100, 4);\n      ctx.fillStyle = COLORS.ember;",
+    "new": "      ctx.fillStyle = p.overheated ? COLORS.cobaltSoft : COLORS.paper;\n      ctx.fillRect(fx, fy, focusW * (p.overheated ? p.burst / p.burstDuration : p.focus / 100), 4);\n      ctx.fillStyle = p.overheated ? COLORS.cobaltSoft : COLORS.ember;"
+  },
+  {
+    "function": null,
+    "old": "          burst: Number(game.player.burst.toFixed(2)),",
+    "new": "          burst: Number(game.player.burst.toFixed(2)),\n          overheated: game.player.overheated === true && game.player.burst > 0,"
+  },
+  {
+    "function": null,
+    "old": "<p id=\"briefingCopy\" class=\"briefing-copy\">The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.</p>",
+    "new": "<p id=\"briefingCopy\" class=\"briefing-copy\">Three Ward Moons damage on contact. Hold and release to strike. At 36%, release an Aphelian Sweep: all three Lattice edges cut. Amber timing restores Focus; full charge overheats.</p>"
+  },
+  {
+    "function": "showOverlay",
+    "old": "briefingCopy.textContent = \"The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.\";",
+    "new": "briefingCopy.textContent = \"Three Ward Moons damage on contact. Hold and release to strike. At 36%, release an Aphelian Sweep: all three Lattice edges cut. Amber timing restores Focus; full charge overheats.\";"
+  },
+  {
+    "function": null,
+    "old": "Amber timing restores 21 Focus.",
+    "new": "Amber timing restores 21 Focus. Full charge overheats until the burst ends: blue Lattice, 5 percent slower movement, 10 percent less reach, 25 percent slower automatic rotation and half the maximum orange-timed damage. Mouse aiming is unchanged."
+  },
+  {
+    "function": "drawHUD",
+    "old": "      const bottom = H - pad;",
+    "new": "      const bottom = Math.min(H, window.innerHeight) - pad;"
+  }
+]
