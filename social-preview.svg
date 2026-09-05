@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">APHELIAN — The Last Orrery</title>
+  <desc id="desc">The Little Orrery emblem beside the title APHELIAN — The Last Orrery.</desc>
+  <defs>
+    <mask id="crescent">
+      <rect x="-55" y="-55" width="110" height="110" fill="#fff"/>
+      <circle cx="19" cy="0" r="40" fill="#000"/>
+    </mask>
+    <pattern id="halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="4" r="1.25" fill="#f1f0e8" opacity=".10"/>
+      <circle cx="12" cy="14" r=".85" fill="#554fff" opacity=".22"/>
+    </pattern>
+    <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+      <path d="M0 0V10" stroke="#1d18f5" stroke-opacity=".10" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#05050e"/>
+  <rect width="1200" height="630" fill="url(#hatch)"/>
+  <rect x="22" y="22" width="1156" height="586" fill="none" stroke="#f1f0e8" stroke-opacity=".40" stroke-width="2"/>
+  <rect x="34" y="34" width="14" height="562" fill="#1d18f5"/>
+  <path d="M71 112H635M71 516H635" stroke="#f1f0e8" stroke-opacity=".28" stroke-width="2"/>
+  <circle cx="1128" cy="86" r="3" fill="#d87932"/>
+  <circle cx="1095" cy="558" r="2" fill="#f1f0e8" opacity=".7"/>
+
+  <g font-family="'Courier New', monospace" font-weight="700" letter-spacing="4">
+    <text x="74" y="89" fill="#d87932" font-size="16">OBSERVATORY FOLIO · 03</text>
+    <text x="74" y="151" fill="#a9abc4" font-size="17">CELESTIAL DEFENSE / FIELD EDITION</text>
+  </g>
+  <text x="67" y="345" fill="#1d18f5" opacity=".82" font-family="Baskerville, Georgia, serif" font-size="116" font-weight="700" letter-spacing="-7">APHELIAN</text>
+  <text x="61" y="337" fill="#f1f0e8" font-family="Baskerville, Georgia, serif" font-size="116" font-weight="700" letter-spacing="-7">APHELIAN</text>
+  <text x="74" y="407" fill="#f1f0e8" font-family="'Courier New', monospace" font-size="27" font-weight="700" letter-spacing="7">THE LAST ORRERY</text>
+  <text x="74" y="477" fill="#a9abc4" font-family="Baskerville, Georgia, serif" font-size="22" font-style="italic">Command three Ward Moons. Seal the Black Sun.</text>
+
+  <g transform="translate(931 316)">
+    <circle r="238" fill="#11154a" opacity=".47"/>
+    <circle r="238" fill="url(#halftone)"/>
+    <circle r="225" fill="none" stroke="#1d18f5" stroke-width="3"/>
+    <circle r="188" fill="none" stroke="#f1f0e8" stroke-opacity=".32" stroke-width="2" stroke-dasharray="5 14"/>
+    <circle r="153" fill="none" stroke="#d87932" stroke-opacity=".42" stroke-width="2" stroke-dasharray="2 18"/>
+
+    <path d="M0-135-118 84 118 84Z" fill="none" stroke="#f1f0e8" stroke-opacity=".35" stroke-width="3"/>
+    <path d="M0-135V0M-118 84 0 0M118 84 0 0" fill="none" stroke="#554fff" stroke-width="4"/>
+
+    <g transform="translate(0 -135) rotate(90)">
+      <circle r="48" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+      <circle r="46" fill="#f1f0e8" mask="url(#crescent)"/>
+    </g>
+    <g transform="translate(-118 84) rotate(-35)">
+      <circle r="48" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+      <circle r="46" fill="#f1f0e8" mask="url(#crescent)"/>
+    </g>
+    <g transform="translate(118 84) rotate(-145)">
+      <circle r="48" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+      <circle r="46" fill="#f1f0e8" mask="url(#crescent)"/>
+    </g>
+
+    <g>
+      <g stroke="#d87932" stroke-width="4">
+        <path d="M0-98V-83M0 83V98M-98 0H-83M83 0H98"/>
+        <path d="M-69-69-59-59M59 59 69 69M69-69 59-59M-59 59-69 69"/>
+      </g>
+      <circle cx="7" cy="6" r="70" fill="#1d18f5"/>
+      <circle r="67" fill="#05050e" stroke="#f1f0e8" stroke-width="4"/>
+      <circle r="49" fill="none" stroke="#554fff" stroke-width="2" stroke-dasharray="2 8"/>
+      <path d="M0-13 10 0 0 13-10 0Z" fill="#d87932"/>
+      <circle r="3" fill="#fff3d5"/>
+    </g>
+  </g>
+
+  <g font-family="'Courier New', monospace" font-size="13" font-weight="700" letter-spacing="3" fill="#a9abc4">
+    <text x="74" y="569">APHELIAN.DEV</text>
+    <text x="945" y="582">THE LITTLE ORRERY</text>
+  </g>
+</svg>

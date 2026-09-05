@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">The Little Orrery</title>
+  <desc id="desc">A black sun guarded by three ivory crescent moons in a triangular lattice, with an ember spark.</desc>
+  <defs>
+    <mask id="crescent">
+      <rect x="-48" y="-48" width="96" height="96" fill="#fff"/>
+      <circle cx="17" cy="0" r="35" fill="#000"/>
+    </mask>
+    <pattern id="grain" width="17" height="19" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="4" r="1" fill="#f1f0e8" opacity=".10"/>
+      <circle cx="11" cy="13" r=".8" fill="#554fff" opacity=".20"/>
+      <circle cx="16" cy="2" r=".6" fill="#d87932" opacity=".13"/>
+    </pattern>
+  </defs>
+
+  <rect width="512" height="512" rx="72" fill="#05050e"/>
+  <rect x="18" y="18" width="476" height="476" rx="57" fill="none" stroke="#f1f0e8" stroke-opacity=".42" stroke-width="4"/>
+  <rect x="31" y="31" width="450" height="450" rx="47" fill="none" stroke="#1d18f5" stroke-width="6"/>
+  <rect x="34" y="34" width="444" height="444" rx="44" fill="url(#grain)"/>
+
+  <circle cx="256" cy="256" r="188" fill="none" stroke="#554fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="5 14"/>
+  <circle cx="256" cy="256" r="154" fill="none" stroke="#d87932" stroke-opacity=".42" stroke-width="2" stroke-dasharray="2 18"/>
+
+  <path d="M256 108 135 341 377 341Z" fill="none" stroke="#f1f0e8" stroke-opacity=".38" stroke-width="3"/>
+  <path d="M256 108 256 256M135 341 256 256M377 341 256 256" fill="none" stroke="#1d18f5" stroke-width="4"/>
+
+  <g transform="translate(256 108) rotate(90)">
+    <circle r="42" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+    <circle r="40" fill="#f1f0e8" mask="url(#crescent)"/>
+  </g>
+  <g transform="translate(135 341) rotate(-35)">
+    <circle r="42" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+    <circle r="40" fill="#f1f0e8" mask="url(#crescent)"/>
+  </g>
+  <g transform="translate(377 341) rotate(-145)">
+    <circle r="42" fill="#1d18f5" transform="translate(5 5)" mask="url(#crescent)"/>
+    <circle r="40" fill="#f1f0e8" mask="url(#crescent)"/>
+  </g>
+
+  <g transform="translate(256 256)">
+    <g stroke="#d87932" stroke-width="5" stroke-linecap="square">
+      <path d="M0-96V-82M0 82V96M-96 0H-82M82 0H96"/>
+      <path d="M-68-68-58-58M58 58 68 68M68-68 58-58M-58 58-68 68"/>
+    </g>
+    <circle cx="7" cy="6" r="70" fill="#1d18f5"/>
+    <circle r="67" fill="#05050e" stroke="#f1f0e8" stroke-width="5"/>
+    <circle r="49" fill="none" stroke="#554fff" stroke-width="2" stroke-dasharray="2 8"/>
+    <path d="M0-13 10 0 0 13-10 0Z" fill="#d87932"/>
+    <circle r="3" fill="#fff3d5"/>
+  </g>
+</svg>

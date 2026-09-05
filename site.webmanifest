@@ -1,0 +1,21 @@
+{
+  "name": "APHELIAN — The Last Orrery",
+  "short_name": "Aphelian",
+  "description": "Command three Ward Moons. Seal the Black Sun.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#05050e",
+  "theme_color": "#05050e",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
