@@ -63,7 +63,12 @@ Command three Ward Moons, break the approaching Voidcraft, and survive the three
 - **Aim:** Pointer or a right-side touch.
 - **Strike:** Hold and release Space, left click, or a right-side touch.
 - **Retrograde:** Right click, Shift, or tap the left side of a touch screen.
-- **Pause / sound:** P or Escape pauses; M toggles sound.
+- **Pause:** Tap **II / Pause** above the Sound button at the lower right, or press P / Escape. Resume with **Resume the rite**. Touch pause works while other fingers are moving/charging and cancels the held inputs without firing an attack. Switching tabs/apps also auto-pauses when the browser reports loss of focus or visibility.
+- **Sound:** Tap Sound or press M.
+
+The playfield suppresses long-press selection/callout defaults with Safari-prefixed CSS and a non-passive, canvas-only touch-start guard. Native menu controls and scrolling are not blocked. Desktop Chromium touch emulation covers charging, overheating, and multi-touch pause; native iOS Safari's magnifier/callout still requires a device check.
+
+Mobile regression checks: `uv run --with playwright python tests/mobile-controls.py` (install the test browser once with `uv run --with playwright playwright install chromium`).
 
 ## Local preview
 
