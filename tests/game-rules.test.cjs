@@ -24,7 +24,7 @@ test('health diamonds represent five 20-percent health slivers', () => {
   }
 });
 
-test('achievement catalog contains the seven requested run feats and difficulties', () => {
+test('achievement catalog contains the eight requested run feats and difficulties', () => {
   assert.deepEqual(
     rules.ACHIEVEMENTS.map(({ id, difficulty }) => [id, difficulty]),
     [
@@ -34,7 +34,8 @@ test('achievement catalog contains the seven requested run feats and difficultie
       ['wounded-unhealed', 'HARD'],
       ['chain-20', 'MEDIUM'],
       ['score-100k', 'HARD'],
-      ['no-reversal', 'EASY']
+      ['no-reversal', 'EASY'],
+      ['dawn-3d', 'EASY']
     ]
   );
 });
@@ -42,6 +43,18 @@ test('achievement catalog contains the seven requested run feats and difficultie
 function unlocked(stats, id) {
   return rules.evaluateAchievements(stats).find(achievement => achievement.id === id).unlocked;
 }
+
+test('3D Dawn requires a 3D victory and participates in EASY achievement sharing', () => {
+  const achievement=rules.ACHIEVEMENTS.find(item=>item.id==='dawn-3d');
+  assert.ok(achievement,'Missing 3D Dawn achievement');
+  assert.equal(achievement.rank,1);
+  for(const [view,won,expected] of [['3d',true,true],['2d',true,false],['3d',false,false],[undefined,true,false]]) {
+    assert.equal(unlocked({view,won},'dawn-3d'),expected);
+  }
+  const achievements=rules.evaluateAchievements({view:'3d',won:true,time:130,damageTaken:1,moved:true,health:100,healed:true,bestChain:0,score:0,reversals:1});
+  assert.equal(rules.rarestAchievement(achievements).id,'dawn-3d');
+  assert.match(rules.buildShareText({achievements}),/DAWN IN THREE DIMENSIONS \[EASY\]/);
+});
 
 test('no-damage achievement tracks whether any Vital Light was lost', () => {
   assert.equal(unlocked({ damageTaken: 0 }, 'no-damage'), true);

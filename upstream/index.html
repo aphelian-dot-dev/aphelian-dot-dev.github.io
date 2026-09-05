@@ -1,0 +1,4649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05050e">
+  <meta name="color-scheme" content="dark">
+  <title>APHELIAN — The Last Orrery</title>
+  <style>
+    :root {
+      --void: #05050e;
+      --ink: #11154a;
+      --cobalt: #1d18f5;
+      --paper: #f1f0e8;
+      --muted: #a9abc4;
+      --ember: #d87932;
+      --rule: rgba(241, 240, 232, .34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--void);
+    }
+
+    body {
+      color: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    canvas:focus-visible {
+      box-shadow: inset 0 0 0 2px var(--paper);
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 4;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(18px, 3vw, 42px);
+      padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+      overflow-y: auto;
+      background: rgba(5, 5, 14, .46);
+      transition: opacity 180ms ease, visibility 0s linear;
+    }
+
+    .overlay[aria-hidden="true"] {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, visibility 0s linear 180ms;
+    }
+
+    .overlay::before {
+      content: "";
+      position: absolute;
+      inset: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+      border: 1px solid var(--rule);
+      pointer-events: none;
+    }
+
+    .overlay::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 10px;
+      width: 7px;
+      background: var(--cobalt);
+      pointer-events: none;
+    }
+
+    .edition {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-left: 12px;
+      font: 700 clamp(9px, 1vw, 11px)/1.2 "Courier New", monospace;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .edition span:last-child { color: var(--muted); }
+
+    .cover {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      align-items: center;
+      gap: clamp(30px, 6vw, 100px);
+      min-height: 0;
+      padding: 0 clamp(0px, 3vw, 54px) 0 12px;
+    }
+
+    .title-block {
+      min-width: 0;
+      align-self: center;
+    }
+
+    .index-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: clamp(8px, 1.5vw, 18px);
+      color: var(--ember);
+      font: 700 clamp(10px, 1vw, 12px)/1 "Courier New", monospace;
+      letter-spacing: .21em;
+      text-transform: uppercase;
+    }
+
+    .index-mark::before {
+      content: "";
+      width: clamp(34px, 7vw, 96px);
+      height: 1px;
+      background: currentColor;
+    }
+
+    h1 {
+      max-width: 12ch;
+      margin: 0;
+      font-family: Didot, "Bodoni 72", Bodoni MT, Baskerville, "Times New Roman", serif;
+      font-size: clamp(64px, 13.4vw, 204px);
+      font-weight: 700;
+      line-height: .72;
+      letter-spacing: -.075em;
+      text-wrap: balance;
+      text-shadow: 4px 3px 0 rgba(29, 24, 245, .78);
+    }
+
+    .kicker {
+      max-width: 46ch;
+      margin: clamp(18px, 3vw, 34px) 0 0;
+      color: var(--muted);
+      font: 600 clamp(11px, 1.15vw, 14px)/1.55 "Courier New", monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-wrap: pretty;
+    }
+
+    .briefing {
+      align-self: end;
+      max-width: 460px;
+      padding: clamp(18px, 2.4vw, 30px) 0 0;
+      border-top: 1px solid var(--rule);
+    }
+
+    .briefing-copy {
+      max-width: 34ch;
+      margin: 0 0 22px;
+      font-family: Baskerville, Georgia, "Times New Roman", serif;
+      font-size: clamp(17px, 1.6vw, 23px);
+      line-height: 1.32;
+      text-wrap: pretty;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 20px;
+      margin-bottom: 24px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .control {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--rule);
+      font: 700 10px/1.25 "Courier New", monospace;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .control b { color: var(--paper); }
+    .control span { color: var(--muted); }
+
+    .score-archive {
+      display: none;
+      margin: -5px 0 14px;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      font-family: "Courier New", monospace;
+    }
+
+    .overlay[data-state="title"] .score-archive { display: block; }
+
+    .score-archive-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 0 7px;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .score-archive-heading strong {
+      color: var(--ember);
+      font-size: 8px;
+    }
+
+    .score-consent,
+    .score-declined,
+    .score-history {
+      padding: 10px 0 11px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .score-consent[hidden],
+    .score-declined[hidden],
+    .score-history[hidden] { display: none; }
+
+    .score-ask {
+      margin: 0 0 5px;
+      color: var(--paper);
+      font: 700 11px/1.3 "Courier New", monospace;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .score-purpose,
+    .score-declined p,
+    .score-empty {
+      margin: 0;
+      color: var(--muted);
+      font: 600 9px/1.4 "Courier New", monospace;
+    }
+
+    .score-choice {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .archive-button {
+      min-height: 30px;
+      padding: 7px 10px;
+      border: 1px solid var(--rule);
+      border-radius: 0;
+      background: transparent;
+      color: var(--paper);
+      cursor: pointer;
+      font: 700 8px/1 "Courier New", monospace;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .archive-button.is-primary {
+      border-color: var(--paper);
+      background: var(--paper);
+      color: var(--void);
+    }
+
+    .archive-button:hover { border-color: var(--ember); }
+    .archive-button:focus-visible {
+      outline: 2px solid var(--ember);
+      outline-offset: 2px;
+    }
+
+    .score-history-list {
+      display: grid;
+      gap: 0;
+      max-height: 92px;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      scrollbar-color: var(--ember) rgba(241, 240, 232, .12);
+      scrollbar-width: thin;
+      list-style: none;
+    }
+
+    .score-history-item {
+      display: grid;
+      grid-template-columns: minmax(62px, 1fr) minmax(44px, .7fr) minmax(40px, .6fr) minmax(48px, .7fr);
+      gap: 5px;
+      padding: 6px 0;
+      border-top: 1px solid rgba(241, 240, 232, .18);
+      color: var(--muted);
+      font: 700 8px/1.2 "Courier New", monospace;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .score-history-item strong { color: var(--paper); }
+    .score-history-item .is-win { color: var(--ember); }
+    .score-history-item span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .score-cookie-details {
+      padding: 7px 0 8px;
+      border-top: 1px solid var(--rule);
+      color: var(--muted);
+      font: 600 8px/1.42 "Courier New", monospace;
+    }
+
+    .score-cookie-details summary {
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .score-cookie-details p { margin: 7px 0 0; }
+    .score-cookie-details code {
+      color: var(--paper);
+      user-select: text;
+    }
+
+    .score-cookie-details kbd {
+      padding: 1px 3px;
+      border: 1px solid var(--rule);
+      color: var(--paper);
+      font: inherit;
+    }
+
+    .rite-button {
+      min-width: min(100%, 290px);
+      min-height: 52px;
+      margin: 0;
+      padding: 15px 22px;
+      border: 1px solid var(--paper);
+      border-radius: 0;
+      background: var(--cobalt);
+      color: var(--paper);
+      cursor: pointer;
+      font: 700 11px/1 "Courier New", monospace;
+      letter-spacing: .2em;
+      text-align: left;
+      text-transform: uppercase;
+      box-shadow: 5px 5px 0 var(--paper);
+      transition: transform 90ms ease, box-shadow 90ms ease, color 90ms ease, background 90ms ease;
+    }
+
+    .rite-button::after {
+      content: "↗";
+      float: right;
+      font-size: 16px;
+      line-height: 8px;
+    }
+
+    .rite-button:hover {
+      background: var(--paper);
+      color: var(--void);
+      transform: translate(2px, 2px);
+      box-shadow: 3px 3px 0 var(--cobalt);
+    }
+
+    .rite-button:active {
+      transform: translate(5px, 5px);
+      box-shadow: none;
+    }
+
+    .result-actions {
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+    }
+
+    .share-button,
+    .home-button {
+      display: none;
+      min-width: 150px;
+      min-height: 52px;
+      padding: 15px 18px;
+      border: 1px solid var(--paper);
+      border-radius: 0;
+      background: rgba(5, 5, 14, .82);
+      color: var(--paper);
+      cursor: pointer;
+      font: 700 10px/1 "Courier New", monospace;
+      letter-spacing: .16em;
+      text-align: left;
+      text-transform: uppercase;
+      box-shadow: 5px 5px 0 var(--cobalt);
+      transition: transform 90ms ease, box-shadow 90ms ease, color 90ms ease, background 90ms ease;
+    }
+
+    .overlay[data-state="result"] .result-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+    }
+
+    .overlay[data-state="result"] .share-button,
+    .overlay[data-state="result"] .home-button { display: block; min-width: 0; }
+    .overlay[data-state="result"] .rite-button { min-width: 0; width: auto; }
+
+    .share-button::after {
+      content: "↗";
+      float: right;
+      font-size: 15px;
+      line-height: 8px;
+    }
+
+    .home-button::after {
+      content: "←";
+      float: right;
+      font-size: 15px;
+      line-height: 8px;
+    }
+
+    .share-button:hover,
+    .home-button:hover {
+      background: var(--paper);
+      color: var(--void);
+      transform: translate(2px, 2px);
+      box-shadow: 3px 3px 0 var(--ember);
+    }
+
+    .share-button:active,
+    .home-button:active {
+      transform: translate(5px, 5px);
+      box-shadow: none;
+    }
+
+    .rite-button:focus-visible,
+    .share-button:focus-visible,
+    .home-button:focus-visible,
+    .sound-button:focus-visible {
+      outline: 2px solid var(--ember);
+      outline-offset: 4px;
+    }
+
+    .results {
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      margin: 0 0 24px;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .overlay[data-state="result"] .results { display: grid; }
+    .overlay[data-state="pause"] .controls,
+    .overlay[data-state="result"] .controls { display: none; }
+
+    .achievements {
+      display: none;
+      margin: -8px 0 16px;
+    }
+
+    .overlay[data-state="result"] .achievements { display: block; }
+    .overlay[data-state="result"] .briefing { max-width: 560px; }
+
+    .achievement-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font: 700 8px/1.2 "Courier New", monospace;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .achievement-heading strong {
+      color: var(--ember);
+      font-size: 9px;
+    }
+
+    .achievement-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid var(--rule);
+      list-style: none;
+    }
+
+    .achievement-item {
+      display: grid;
+      grid-template-columns: 13px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+      padding: 7px 8px 7px 0;
+      border-bottom: 1px solid var(--rule);
+      opacity: .43;
+    }
+
+    .achievement-item:nth-child(even) {
+      padding-left: 9px;
+      border-left: 1px solid var(--rule);
+    }
+
+    .achievement-item.is-unlocked { opacity: 1; }
+
+    .achievement-mark {
+      color: var(--muted);
+      font: 700 11px/1 "Courier New", monospace;
+    }
+
+    .achievement-item.is-unlocked .achievement-mark { color: var(--ember); }
+
+    .achievement-title {
+      overflow: hidden;
+      color: var(--paper);
+      font: 700 8px/1.2 "Courier New", monospace;
+      letter-spacing: .04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .achievement-difficulty {
+      color: var(--muted);
+      font: 700 7px/1 "Courier New", monospace;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+
+    .achievement-item.is-unlocked .achievement-difficulty { color: var(--ember); }
+
+    .field-guide {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: 0 0 18px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .overlay[data-state="pause"] .field-guide { display: grid; }
+    .overlay[data-state="pause"] .briefing { max-width: 560px; }
+
+    @media (min-width: 761px) {
+      .overlay[data-state="title"] .cover { min-height: min-content; }
+
+      .overlay[data-state="pause"] h1 {
+        font-size: clamp(56px, 9vw, 100px);
+      }
+    }
+
+    .guide-entry {
+      min-width: 0;
+      padding: 9px 10px 9px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .guide-entry:nth-child(even) {
+      padding-left: 12px;
+      border-left: 1px solid var(--rule);
+    }
+
+    .guide-entry b,
+    .guide-entry span { display: block; }
+
+    .guide-entry b {
+      margin-bottom: 4px;
+      color: var(--paper);
+      font: 700 9px/1.1 "Courier New", monospace;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .guide-entry span {
+      color: var(--muted);
+      font: 600 10px/1.35 "Courier New", monospace;
+      text-wrap: pretty;
+    }
+
+    .result-cell {
+      min-width: 0;
+      padding: 11px 8px 11px 0;
+    }
+
+    .result-cell + .result-cell {
+      padding-left: 12px;
+      border-left: 1px solid var(--rule);
+    }
+
+    .result-cell span {
+      display: block;
+      color: var(--muted);
+      font: 700 9px/1.3 "Courier New", monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .result-cell strong {
+      display: block;
+      overflow: hidden;
+      margin-top: 5px;
+      font: 700 clamp(19px, 2vw, 28px)/1 Baskerville, Georgia, serif;
+      text-overflow: ellipsis;
+    }
+
+    .folio {
+      position: relative;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 0 112px 0 12px;
+      color: var(--muted);
+      font: 700 9px/1.4 "Courier New", monospace;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .folio span:last-child { text-align: right; }
+
+    .sound-button {
+      position: fixed;
+      z-index: 7;
+      right: max(24px, env(safe-area-inset-right));
+      bottom: max(22px, env(safe-area-inset-bottom));
+      min-width: 92px;
+      min-height: 34px;
+      padding: 8px 10px;
+      border: 1px solid rgba(241, 240, 232, .5);
+      border-radius: 0;
+      background: rgba(5, 5, 14, .78);
+      color: var(--paper);
+      cursor: pointer;
+      font: 700 9px/1 "Courier New", monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    body.is-playing .sound-button {
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+    }
+
+    .overlay[aria-hidden="false"] ~ .sound-button {
+      top: max(55px, env(safe-area-inset-top));
+      bottom: auto;
+    }
+
+    .touch-note { display: none; }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    @media (max-width: 420px) {
+      .overlay[data-state="result"] .achievement-list { grid-template-columns: 1fr; }
+      .overlay[data-state="result"] .achievement-item { padding: 5px 0; }
+      .overlay[data-state="result"] .achievement-item:nth-child(even) {
+        padding-left: 0;
+        border-left: 0;
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 1280px) and (min-height: 421px) {
+      .overlay[data-state="result"] .cover {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        grid-template-columns: 1fr;
+        align-content: center;
+        gap: clamp(12px, 2.5vh, 20px);
+        padding-right: 12px;
+      }
+      .overlay[data-state="result"] .title-block { align-self: end; }
+      .overlay[data-state="result"] .briefing {
+        width: 100%;
+        max-width: none;
+        align-self: start;
+      }
+      .overlay[data-state="result"] h1 { font-size: clamp(52px, 9vw, 84px); }
+      .overlay[data-state="result"] .kicker { margin-top: 10px; font-size: 10px; }
+    }
+
+    @media (min-width: 640px) and (max-width: 1280px) and (min-height: 421px) and (max-height: 440px) {
+      .overlay[data-state="result"] .achievement-item {
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+    }
+
+    @media (max-height: 420px) {
+      .overlay[data-state="title"] .controls { display: none; }
+      .overlay[data-state="title"] .score-archive { margin: 0; }
+      .overlay[data-state="title"] .score-archive-heading { padding: 4px 0; }
+      .overlay[data-state="title"] .score-consent,
+      .overlay[data-state="title"] .score-declined,
+      .overlay[data-state="title"] .score-history { padding: 5px 0; }
+      .overlay[data-state="title"] .score-ask { margin-bottom: 2px; font-size: 8px; }
+      .overlay[data-state="title"] .score-purpose,
+      .overlay[data-state="title"] .score-declined p,
+      .overlay[data-state="title"] .score-empty { font-size: 7px; line-height: 1.2; }
+      .overlay[data-state="title"] .score-choice { margin-top: 5px; }
+      .overlay[data-state="title"] .archive-button { min-height: 26px; padding: 5px 8px; font-size: 7px; }
+      .overlay[data-state="title"] .rite-button { min-height: 35px; padding: 8px 13px; }
+      .overlay[data-state="title"] .score-history-list { max-height: 54px; }
+      .overlay[data-state="title"] .score-history-item { padding: 3px 0; font-size: 6px; }
+      .overlay[data-state="title"] .score-cookie-details { padding: 4px 0; font-size: 7px; }
+      .overlay[data-state="title"] .score-cookie-details[open] {
+        max-height: 42vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .overlay[data-state="result"] {
+        grid-template-rows: 1fr;
+        gap: 0;
+        padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      }
+      .overlay[data-state="result"] .edition,
+      .overlay[data-state="result"] .folio,
+      .overlay[data-state="result"] .title-block { display: none; }
+      .overlay[data-state="result"] .cover {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        grid-template-columns: 1fr;
+        align-content: center;
+        gap: 0;
+        padding: 0 8px;
+      }
+      .overlay[data-state="result"] .briefing {
+        width: 100%;
+        max-width: none;
+        align-self: center;
+        padding-top: 0;
+        border-top: 0;
+      }
+      .overlay[data-state="result"] .results { margin-bottom: 5px; }
+      .overlay[data-state="result"] .result-cell { padding: 4px 6px 4px 0; }
+      .overlay[data-state="result"] .result-cell + .result-cell { padding-left: 8px; }
+      .overlay[data-state="result"] .result-cell span { font-size: 7px; }
+      .overlay[data-state="result"] .result-cell strong { margin-top: 2px; font-size: 16px; }
+      .overlay[data-state="result"] .achievements { margin: 0 0 5px; }
+      .overlay[data-state="result"] .achievement-heading { margin-bottom: 3px; font-size: 7px; }
+      .overlay[data-state="result"] .achievement-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .overlay[data-state="result"] .achievement-item { padding: 3px 5px 3px 0; }
+      .overlay[data-state="result"] .achievement-item:nth-child(even) {
+        padding-left: 6px;
+        border-left: 1px solid var(--rule);
+      }
+      .overlay[data-state="result"] .achievement-title { font-size: 7px; }
+      .overlay[data-state="result"] .achievement-difficulty { font-size: 6px; }
+      .overlay[data-state="result"] .result-actions { gap: 8px; }
+      .overlay[data-state="result"] .rite-button,
+      .overlay[data-state="result"] .share-button,
+      .overlay[data-state="result"] .home-button {
+        min-height: 36px;
+        padding: 9px 12px;
+        font-size: 8px;
+        box-shadow: 3px 3px 0 var(--paper);
+      }
+      .overlay[data-state="result"] .share-button,
+      .overlay[data-state="result"] .home-button {
+        min-width: 0;
+        box-shadow: 3px 3px 0 var(--cobalt);
+      }
+      .overlay[data-state="result"][aria-hidden="false"] ~ .sound-button { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .overlay {
+        gap: 16px;
+        padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      }
+
+      .edition span:last-child { display: none; }
+      .cover {
+        grid-template-columns: 1fr;
+        align-content: end;
+        gap: 24px;
+        padding: 0 6px 0 10px;
+      }
+
+      .title-block { align-self: end; }
+      h1 { max-width: 10ch; font-size: clamp(52px, 17.7vw, 96px); line-height: .77; }
+      .kicker { max-width: 34ch; margin-top: 14px; font-size: 10px; }
+      .briefing { align-self: start; padding-top: 14px; }
+      .briefing-copy { display: none; }
+      .controls { margin-bottom: 16px; }
+      .control { grid-template-columns: 67px 1fr; font-size: 9px; padding: 8px 0; }
+      .field-guide { margin-bottom: 14px; }
+      .guide-entry { padding-top: 7px; padding-bottom: 7px; }
+      .guide-entry b { font-size: 8px; }
+      .guide-entry span { font-size: 9px; line-height: 1.28; }
+      .rite-button { min-height: 48px; width: 100%; }
+      .folio { display: none; }
+      .sound-button { right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom)); }
+      .overlay[aria-hidden="false"] ~ .sound-button {
+        top: max(12px, env(safe-area-inset-top));
+        bottom: auto;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .index-mark {
+        gap: 0;
+        font-size: 8px;
+        letter-spacing: .1em;
+      }
+      .index-mark::before { display: none; }
+      .controls { column-gap: 8px; }
+      .control { grid-template-columns: 42px 1fr; gap: 6px; }
+    }
+
+    @media (max-height: 610px) and (min-width: 640px) {
+      .overlay { gap: 10px; padding-top: 18px; padding-bottom: 18px; }
+      .cover { grid-template-columns: 1.2fr .8fr; gap: 34px; }
+      h1 { font-size: clamp(70px, 12.5vw, 145px); }
+      .kicker { margin-top: 12px; }
+      .briefing { padding-top: 12px; }
+      .briefing-copy { display: none; }
+      .controls { margin-bottom: 14px; }
+      .control { padding: 7px 0; }
+      .rite-button { min-height: 46px; }
+    }
+
+    @media (max-height: 420px) and (min-width: 520px) {
+      .overlay {
+        grid-template-rows: 1fr;
+        gap: 0;
+        padding: max(18px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+      }
+      .edition,
+      .folio { display: none; }
+      .cover {
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
+        align-items: center;
+        align-content: center;
+        gap: clamp(16px, 3vw, 30px);
+        padding: 0 8px;
+      }
+      .title-block,
+      .briefing { align-self: center; }
+      .index-mark { margin-bottom: 7px; font-size: 8px; }
+      h1 { font-size: clamp(42px, 8.8vw, 58px); line-height: .78; }
+      .kicker { max-width: 31ch; margin-top: 10px; font-size: 8px; line-height: 1.42; }
+      .briefing { padding-top: 0; border-top: 0; }
+      .controls { margin-bottom: 12px; }
+      .control { grid-template-columns: 58px 1fr; gap: 7px; padding: 6px 0; font-size: 8px; }
+      .field-guide { margin-bottom: 9px; }
+      .guide-entry { padding-top: 5px; padding-bottom: 5px; }
+      .guide-entry b { margin-bottom: 2px; font-size: 7px; }
+      .guide-entry span { font-size: 8px; line-height: 1.2; }
+      .results { margin-bottom: 12px; }
+      .result-cell strong { font-size: 18px; }
+      .rite-button { min-height: 44px; padding: 12px 16px; }
+      .overlay[aria-hidden="false"] ~ .sound-button {
+        top: max(16px, env(safe-area-inset-top));
+        right: max(18px, env(safe-area-inset-right));
+      }
+    }
+
+    @media (max-height: 420px) and (max-width: 519px) {
+      .overlay {
+        grid-template-rows: 1fr;
+        gap: 0;
+        padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+      }
+      .edition,
+      .folio { display: none; }
+      .cover {
+        grid-template-columns: 1fr;
+        align-content: center;
+        gap: 6px;
+        padding: 0 4px;
+      }
+      .title-block { align-self: end; }
+      .briefing { align-self: start; padding-top: 0; border-top: 0; }
+      .index-mark { margin-bottom: 4px; font-size: 8px; }
+      h1 { max-width: none; font-size: clamp(34px, 10vw, 46px); line-height: .8; }
+      .kicker,
+      .briefing-copy { display: none; }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 12px;
+        margin-bottom: 7px;
+      }
+      .control { grid-template-columns: 42px 1fr; gap: 5px; padding: 4px 0; font-size: 8px; }
+      .field-guide { margin-bottom: 6px; }
+      .guide-entry { padding: 4px 5px 4px 0; }
+      .guide-entry:nth-child(even) { padding-left: 6px; }
+      .guide-entry b { margin-bottom: 1px; font-size: 7px; }
+      .guide-entry span { font-size: 7px; line-height: 1.15; }
+      .rite-button { min-height: 40px; padding: 10px 13px; }
+      .overlay[aria-hidden="false"] ~ .sound-button {
+        top: max(12px, env(safe-area-inset-top));
+        right: max(14px, env(safe-area-inset-right));
+        min-width: 82px;
+        min-height: 32px;
+        font-size: 8px;
+      }
+    }
+
+    @media (max-width: 359px) and (max-height: 420px) {
+      .overlay[data-state="result"] .achievement-list { grid-template-columns: 1fr; }
+      .overlay[data-state="result"] .achievement-item { padding: 2px 0; }
+      .overlay[data-state="result"] .achievement-item:nth-child(even) {
+        padding-left: 0;
+        border-left: 0;
+      }
+    }
+
+    @media (pointer: coarse) {
+      .touch-note { display: inline; }
+      .desktop-note { display: none; }
+      body.is-playing canvas { cursor: none; }
+      .sound-button { min-height: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .overlay,
+      .overlay[aria-hidden="true"],
+      .rite-button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" tabindex="0" aria-label="Aphelian, a celestial-sorcery defense game" aria-describedby="gameInstructions"></canvas>
+  <p id="gameInstructions" class="sr-only">Three crescent Ward Moons orbit you and damage Voidcraft on contact. Hold, then release to drive them outward; any charged release is a Ward Moon Strike. At 36 percent charge, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores 21 Focus. White bars show remaining Voidcraft health. Amber-cored Cinder Skiffs drop Orrery Fuel; collect it for a two-second movement boost shown above you. One harmless wayfaring meteor crosses each movement; strike it three times to quicken the Ward Moons for five seconds. Five diamonds at the lower left show your Vital Light in twenty-percent slivers. Right click or Shift activates Retrograde and reverses the Ward Moons.</p>
+
+  <section id="overlay" class="overlay" data-state="title" aria-hidden="false" aria-labelledby="mainTitle">
+    <header class="edition" aria-hidden="true">
+      <span>Observatory folio · 03</span>
+      <span>Celestial defense / field edition</span>
+    </header>
+
+    <main class="cover">
+      <div class="title-block">
+        <div id="eyebrow" class="index-mark">A rite in three movements</div>
+        <h1 id="mainTitle">APHELIAN</h1>
+        <p id="subtitle" class="kicker">Command three Ward Moons around the last orrery. Break the approaching Voidcraft before totality.</p>
+      </div>
+
+      <div class="briefing">
+        <p id="briefingCopy" class="briefing-copy">The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.</p>
+
+        <div class="controls" aria-label="Controls">
+          <div class="control"><b>Move</b><span class="desktop-note">WASD / arrows</span><span class="touch-note">Drag left field</span></div>
+          <div class="control"><b>Aim</b><span class="desktop-note">Mouse</span><span class="touch-note">Right field</span></div>
+          <div class="control"><b>Moons</b><span>Hold + release</span></div>
+          <div class="control"><b>Reverse</b><span class="desktop-note">Right click / Shift</span><span class="touch-note">Tap left field</span></div>
+        </div>
+
+        <section id="scoreArchive" class="score-archive" aria-labelledby="scoreArchiveHeading">
+          <div class="score-archive-heading">
+            <span id="scoreArchiveHeading">Rite archive</span>
+            <strong id="scoreArchiveStatus">Optional / off</strong>
+          </div>
+          <div id="scoreConsent" class="score-consent" role="group" aria-labelledby="scoreConsentQuestion" aria-describedby="scoreConsentPurpose">
+            <p id="scoreConsentQuestion" class="score-ask">Would you like Aphelian to remember your past scores?</p>
+            <p id="scoreConsentPurpose" class="score-purpose">If you choose yes, one first-party cookie keeps up to 10 completed rites on this browser. Its one-year Max-Age renews after each saved rite. It is used only for this score archive—no account, ads, analytics, or cross-site tracking.</p>
+            <div class="score-choice">
+              <button id="rememberScoresButton" class="archive-button is-primary" type="button">Remember scores</button>
+              <button id="declineScoresButton" class="archive-button" type="button">Not now</button>
+            </div>
+          </div>
+          <div id="scoreDeclined" class="score-declined" hidden>
+            <p id="scoreDeclinedCopy">No cookie was created. Score saving is off for this visit.</p>
+            <div class="score-choice">
+              <button id="reconsiderScoresButton" class="archive-button" type="button">Enable score archive</button>
+              <button id="removeBlockedScoreCookieButton" class="archive-button" type="button" hidden>Remove incompatible cookie</button>
+            </div>
+          </div>
+          <div id="scoreHistory" class="score-history" hidden>
+            <p id="scoreHistorySummary" class="score-empty">No past rites saved yet. Your next completed rite will appear here.</p>
+            <ol id="scoreHistoryList" class="score-history-list" aria-label="Saved rites, most recent first"></ol>
+            <div class="score-choice">
+              <button id="forgetScoresButton" class="archive-button" type="button">Forget saved scores</button>
+            </div>
+          </div>
+          <details id="scoreCookieDetails" class="score-cookie-details">
+            <summary>Cookie details + how to inspect</summary>
+            <p><code>aphelian_score_history</code> contains URL-encoded JSON: version plus each run's score, win/loss, best chain, rite seconds, and completion time. No name or unique identifier is stored. It is host-only, uses <code>Path=/</code> and <code>SameSite=Strict</code>, and adds <code>Secure</code> on HTTPS. Its one-year <code>Max-Age</code> renews after each saved rite; because renewal applies to the whole cookie, older entries may remain longer than one year while you continue saving. It cannot be <code>HttpOnly</code> because this page must read it to draw the archive.</p>
+            <p>Because it is a cookie, your browser includes it in requests to this site. Aphelian is a static game and contains no code that sends or uses it for anything beyond this on-page archive.</p>
+            <p>Archive changes use Web Locks so tabs cannot overwrite one another. If Web Locks are unavailable, the archive stays off. A malformed or unsupported-version same-name cookie is marked incompatible; it does not grant consent and will not be overwritten. Use <b>Remove incompatible cookie</b> when offered, or follow the manual steps below.</p>
+            <p>Firefox: <kbd>F12</kbd> → Storage → Cookies → this site. Chrome / Edge: <kbd>F12</kbd> → Application → Storage → Cookies → this site. To see decoded content in either browser's Console, run <code>window.__ORRERY__.scoreArchive()</code>.</p>
+          </details>
+        </section>
+
+        <div class="field-guide" role="list" aria-label="Combat field reference">
+          <div class="guide-entry" role="listitem"><b>Ward Moons</b><span>Three crescents. Contact damages Voidcraft; hold + release to strike.</span></div>
+          <div class="guide-entry" role="listitem"><b>Lattice</b><span>At 36%, release an Aphelian Sweep: all three solid edges cut. Amber timing restores Focus.</span></div>
+          <div class="guide-entry" role="listitem"><b>Voidcraft</b><span>Incoming threats. White bar = remaining health.</span></div>
+          <div class="guide-entry" role="listitem"><b>Retrograde</b><span>Right click or Shift reverses Ward Moon rotation.</span></div>
+        </div>
+
+        <div class="results" aria-label="Run results">
+          <div class="result-cell"><span>Score</span><strong id="resultScore">000000</strong></div>
+          <div class="result-cell"><span>Best chain</span><strong id="resultChain">×0</strong></div>
+          <div class="result-cell"><span>Rite</span><strong id="resultTime">00:00</strong></div>
+        </div>
+
+        <section class="achievements" aria-labelledby="achievementHeading">
+          <div class="achievement-heading">
+            <span id="achievementHeading">Post-rite achievements</span>
+            <strong id="achievementCount">0 / 7</strong>
+            <strong id="scoreSaveNotice" hidden>Score not saved</strong>
+          </div>
+          <ul id="achievementList" class="achievement-list"></ul>
+        </section>
+
+        <div class="result-actions">
+          <button id="riteButton" class="rite-button" type="button">Begin the rite</button>
+          <button id="homeButton" class="home-button" type="button">Home</button>
+          <button id="shareButton" class="share-button" type="button">Share run</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="folio" aria-hidden="true">
+      <span>Ward Moons hit · white bars show Voidcraft health</span>
+      <span>Right click / Shift — reverse&nbsp;&nbsp; · &nbsp;&nbsp;P / Esc — pause</span>
+    </footer>
+  </section>
+
+  <button id="soundButton" class="sound-button" type="button" aria-pressed="true">Sound / on</button>
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+  <noscript>This game requires JavaScript.</noscript>
+
+  <!-- Inline by design: Flatpak document portals may expose only index.html. -->
+  <script id="aphelionRulesSource">
+(function exposeAphelionRules(root, factory) {
+  const rules = factory();
+  if (typeof module === "object" && module.exports) module.exports = rules;
+  else root.AphelionRules = Object.freeze(rules);
+})(typeof globalThis !== "undefined" ? globalThis : this, () => {
+  "use strict";
+
+  const METEOR_BOOST_DURATION = 5;
+  const SCORE_HISTORY_LIMIT = 10;
+  const SCORE_HISTORY_VERSION = 1;
+  const ACHIEVEMENTS = Object.freeze([
+    Object.freeze({
+      id: "no-damage",
+      title: "NO DAMAGE TAKEN",
+      description: "Finish the run without losing Vital Light.",
+      difficulty: "VERY HARD",
+      rank: 4
+    }),
+    Object.freeze({
+      id: "under-two-minutes",
+      title: "RITE UNDER TWO MINUTES",
+      description: "Seal the Black Sun in under two minutes.",
+      difficulty: "MEDIUM",
+      rank: 2
+    }),
+    Object.freeze({
+      id: "no-movement",
+      title: "RITE WITHOUT MOVING",
+      description: "Finish without using movement controls.",
+      difficulty: "VERY HARD",
+      rank: 4
+    }),
+    Object.freeze({
+      id: "wounded-unhealed",
+      title: "WOUNDED / NEVER HEALED",
+      description: "Finish below full health without recovering any.",
+      difficulty: "HARD",
+      rank: 3
+    }),
+    Object.freeze({
+      id: "chain-20",
+      title: "CHAIN ×20",
+      description: "Reach a twenty-destruction chain.",
+      difficulty: "MEDIUM",
+      rank: 2
+    }),
+    Object.freeze({
+      id: "score-100k",
+      title: "SIX-FIGURE RITE",
+      description: "Earn a score of 100,000 or more in one rite.",
+      difficulty: "HARD",
+      rank: 3
+    }),
+    Object.freeze({
+      id: "no-reversal",
+      title: "NEVER REVERSED COURSE",
+      description: "Complete the run without Retrograde.",
+      difficulty: "EASY",
+      rank: 1
+    })
+  ]);
+
+  function healthDiamondCount(health) {
+    const value = Number.isFinite(Number(health)) ? Number(health) : 0;
+    return Math.ceil(Math.max(0, Math.min(100, value)) / 20);
+  }
+
+  function nonNegativeFiniteNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 0;
+  }
+
+  function normalizeScoreRun(run = {}) {
+    const time = nonNegativeFiniteNumber(run.time);
+    return {
+      score: Math.floor(nonNegativeFiniteNumber(run.score)),
+      won: run.won === true,
+      bestChain: Math.floor(nonNegativeFiniteNumber(run.bestChain)),
+      time: time > Number.MAX_VALUE / 10 ? time : Math.round(time * 10) / 10,
+      completedAt: typeof run.completedAt === "string" ? run.completedAt : ""
+    };
+  }
+
+  function appendScoreHistory(history = {}, run = {}) {
+    const previousRuns = Array.isArray(history.runs) ? history.runs : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: [normalizeScoreRun(run), ...previousRuns.map(normalizeScoreRun)].slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function validStoredScoreNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  }
+
+  function validStoredScoreRun(run) {
+    return Boolean(
+      run
+      && typeof run === "object"
+      && !Array.isArray(run)
+      && validStoredScoreNumber(run.score)
+      && typeof run.won === "boolean"
+      && validStoredScoreNumber(run.bestChain)
+      && validStoredScoreNumber(run.time)
+      && typeof run.completedAt === "string"
+      && Number.isFinite(Date.parse(run.completedAt))
+    );
+  }
+
+  function normalizeScoreHistory(history = {}) {
+    const runs = history && history.version === SCORE_HISTORY_VERSION && Array.isArray(history.runs)
+      ? history.runs
+      : [];
+    return {
+      version: SCORE_HISTORY_VERSION,
+      runs: runs
+        .filter(validStoredScoreRun)
+        .map(normalizeScoreRun)
+        .slice(0, SCORE_HISTORY_LIMIT)
+    };
+  }
+
+  function parseScoreHistory(serialized) {
+    try { return normalizeScoreHistory(JSON.parse(serialized)); }
+    catch (_) { return normalizeScoreHistory(); }
+  }
+
+  function parseStoredScoreHistory(serialized) {
+    try {
+      const history = JSON.parse(serialized);
+      if (
+        !history
+        || typeof history !== "object"
+        || history.version !== SCORE_HISTORY_VERSION
+        || !Array.isArray(history.runs)
+        || !history.runs.every(validStoredScoreRun)
+      ) return null;
+      return normalizeScoreHistory(history);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function serializeScoreHistory(history) {
+    return JSON.stringify(normalizeScoreHistory(history));
+  }
+
+  function evaluateAchievements(stats = {}) {
+    const unlockedById = {
+      "no-damage": (Number(stats.damageTaken) || 0) <= 0,
+      "under-two-minutes": stats.won === true && Number(stats.time) < 120,
+      "no-movement": stats.won === true && stats.moved !== true,
+      "wounded-unhealed": stats.won === true
+        && Number(stats.health) > 0
+        && Number(stats.health) < 100
+        && stats.healed !== true,
+      "chain-20": Number(stats.bestChain) >= 20,
+      "score-100k": Number(stats.score) >= 100000,
+      "no-reversal": (Number(stats.reversals) || 0) === 0
+    };
+    return ACHIEVEMENTS.map(achievement => ({
+      ...achievement,
+      unlocked: Boolean(unlockedById[achievement.id])
+    }));
+  }
+
+  function rarestAchievement(achievements = []) {
+    return achievements.reduce((rarest, achievement) => {
+      if (!achievement.unlocked) return rarest;
+      if (!rarest || achievement.rank > rarest.rank) return achievement;
+      return rarest;
+    }, null);
+  }
+
+  function formatTime(seconds) {
+    const whole = Math.max(0, Math.ceil(Number(seconds) || 0));
+    return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}`;
+  }
+
+  function buildShareText({ score = 0, bestChain = 0, time = 0, achievements = [] } = {}) {
+    const rarest = rarestAchievement(achievements);
+    const rarestLabel = rarest ? `${rarest.title} [${rarest.difficulty}]` : "NONE THIS RUN";
+    const paddedScore = String(Math.max(0, Math.floor(Number(score) || 0))).padStart(6, "0");
+    return [
+      "APHELIAN // THE LAST ORRERY",
+      `Score: ${paddedScore}`,
+      `Best Chain: ×${Math.max(0, Math.floor(Number(bestChain) || 0))}`,
+      `Rite: ${formatTime(time)}`,
+      `Rarest Achievement: ${rarestLabel}`,
+      "https://aphelian.dev"
+    ].join("\n");
+  }
+
+  function defaultPlayerMaxSpeed(width, height) {
+    const shortestSide = Math.min(Number(width) || 320, Number(height) || 320);
+    return Math.min(285, Math.max(185, shortestSide * .34));
+  }
+
+  function meteorTravelSpeed(width, height) {
+    return defaultPlayerMaxSpeed(width, height) * .82;
+  }
+
+  function applyMeteorHit(hitsRemaining) {
+    return Math.max(0, Math.floor(Number(hitsRemaining) || 0) - 1);
+  }
+
+  function meteorWaveDue(time, spawnedWaves = []) {
+    const elapsed = Number(time);
+    if (!Number.isFinite(elapsed) || elapsed < 0) return null;
+    const wave = Math.floor(elapsed / 20);
+    if (wave >= 3 || elapsed < wave * 20 + 4) return null;
+    const alreadySpawned = typeof spawnedWaves.has === "function"
+      ? spawnedWaves.has(wave)
+      : Array.from(spawnedWaves).includes(wave);
+    return alreadySpawned ? null : wave;
+  }
+
+  return {
+    ACHIEVEMENTS,
+    METEOR_BOOST_DURATION,
+    SCORE_HISTORY_LIMIT,
+    SCORE_HISTORY_VERSION,
+    applyMeteorHit,
+    appendScoreHistory,
+    buildShareText,
+    defaultPlayerMaxSpeed,
+    evaluateAchievements,
+    formatTime,
+    healthDiamondCount,
+    meteorTravelSpeed,
+    meteorWaveDue,
+    parseScoreHistory,
+    parseStoredScoreHistory,
+    rarestAchievement,
+    serializeScoreHistory
+  };
+});
+</script>
+  <script>
+  (() => {
+    "use strict";
+
+    console.info(
+      "%c" + String.raw`
+┌───────────────────────────────┐
+│              ☾                │
+│            ╱   ╲              │
+│          ╱   ◉   ╲            │
+│        ☾───────────☽          │
+│                               │
+│  APHELIAN // THE LAST ORRERY  │
+│  THE OBSERVATORY REMEMBERS.   │
+└───────────────────────────────┘`,
+      "color:#f4b573; background:#05050e; font-family:ui-monospace,monospace; font-size:12px; line-height:1.2;"
+    );
+
+    const TAU = Math.PI * 2;
+    const STEP = 1 / 60;
+    const BOSS_TIME = 60;
+    const DIFFICULTY_RAMP_TIME = 90;
+    const SPEED_BONUS_WINDOW = 90;
+    const RITE_SCORE_WINDOW = 120;
+    const SCORE_COOKIE_NAME = "aphelian_score_history";
+    const SCORE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+    const SCORE_ARCHIVE_LOCK_NAME = "aphelian-score-archive";
+    const SCORE_COOKIE_PROPAGATION_MS = 100;
+    const VITAL_ECHO_DURATION = .95;
+    const FUEL_BOOST_DURATION = 2;
+    const MIN_MOON_STRIKE_CHARGE = .001;
+    const LATTICE_IGNITION = .36;
+    const COLORS = {
+      void: "#05050e",
+      ink: "#11154a",
+      cobalt: "#1d18f5",
+      cobaltSoft: "#5552ff",
+      paper: "#f1f0e8",
+      muted: "#a9abc4",
+      ember: "#d87932",
+      emberPale: "#f0aa62"
+    };
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+    const overlay = document.getElementById("overlay");
+    const eyebrow = document.getElementById("eyebrow");
+    const scoreSaveNotice = document.getElementById("scoreSaveNotice");
+    const mainTitle = document.getElementById("mainTitle");
+    const subtitle = document.getElementById("subtitle");
+    const briefingCopy = document.getElementById("briefingCopy");
+    const riteButton = document.getElementById("riteButton");
+    const homeButton = document.getElementById("homeButton");
+    const shareButton = document.getElementById("shareButton");
+    const soundButton = document.getElementById("soundButton");
+    const resultScore = document.getElementById("resultScore");
+    const resultChain = document.getElementById("resultChain");
+    const resultTime = document.getElementById("resultTime");
+    const achievementList = document.getElementById("achievementList");
+    const achievementCount = document.getElementById("achievementCount");
+    const scoreArchiveStatus = document.getElementById("scoreArchiveStatus");
+    const scoreConsent = document.getElementById("scoreConsent");
+    const scoreDeclined = document.getElementById("scoreDeclined");
+    const scoreDeclinedCopy = document.getElementById("scoreDeclinedCopy");
+    const scoreHistory = document.getElementById("scoreHistory");
+    const scoreHistorySummary = document.getElementById("scoreHistorySummary");
+    const scoreHistoryList = document.getElementById("scoreHistoryList");
+    const scoreCookieDetails = document.getElementById("scoreCookieDetails");
+    const rememberScoresButton = document.getElementById("rememberScoresButton");
+    const declineScoresButton = document.getElementById("declineScoresButton");
+    const reconsiderScoresButton = document.getElementById("reconsiderScoresButton");
+    const removeBlockedScoreCookieButton = document.getElementById("removeBlockedScoreCookieButton");
+    const forgetScoresButton = document.getElementById("forgetScoresButton");
+    const announcer = document.getElementById("announcer");
+
+    const backgroundLayer = document.createElement("canvas");
+    const grainLayer = document.createElement("canvas");
+    const bctx = backgroundLayer.getContext("2d");
+    const gctx = grainLayer.getContext("2d");
+
+    const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+    let reducedMotion = reducedMotionQuery.matches;
+    let W = 1;
+    let H = 1;
+    let DPR = 1;
+    let baseOrbit = 110;
+    let lastFrame = performance.now();
+    let accumulator = 0;
+    let ambientTime = 0;
+    let frameNo = 0;
+    let runNo = 0;
+    let rng = mulberry32(0xa917e1);
+    let grainPattern = null;
+    let vignetteGradient = null;
+    let renderScale = 1;
+    let lowFpsTime = 0;
+    let shareAttempt = 0;
+    let scoreSaveAttempt = 0;
+    let shareFeedbackTimer = 0;
+    let scoreArchiveState = initialScoreArchiveState();
+    let scoreArchiveConsentRevoked = false;
+    let scoreArchiveEnableAttempt = 0;
+
+    const keys = new Set();
+    const foldSources = new Set();
+    const pointer = { x: 0, y: 0, active: false };
+    const touchMove = { id: null, ox: 0, oy: 0, x: 0, y: 0, started: 0 };
+    const touchCast = { id: null };
+
+    const game = {
+      mode: "title",
+      time: 0,
+      score: 0,
+      shownScore: 0,
+      enemies: [],
+      particles: [],
+      waves: [],
+      pickups: [],
+      floaters: [],
+      player: null,
+      boss: null,
+      bossSpawned: false,
+      spawnTimer: .8,
+      cinderTimer: 9,
+      chain: 0,
+      bestChain: 0,
+      chainTimer: 0,
+      kills: 0,
+      freeze: 0,
+      shake: 0,
+      flash: 0,
+      phase: 0,
+      chapter: null,
+      victoryPending: 0,
+      fps: 60,
+      frameSamples: 0,
+      endReason: "",
+      achievements: [],
+      runStats: createRunStats(),
+      meteorWavesSpawned: new Set()
+    };
+
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function damp(a, b, lambda, dt) { return lerp(a, b, 1 - Math.exp(-lambda * dt)); }
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeInOut(t) { return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function distSq(ax, ay, bx, by) { const dx = ax - bx; const dy = ay - by; return dx * dx + dy * dy; }
+    function rr(min, max) { return min + rng() * (max - min); }
+    function chance(p) { return rng() < p; }
+    function padScore(n) { return String(Math.max(0, Math.floor(n))).padStart(6, "0"); }
+    function formatTime(t) {
+      const whole = Math.max(0, Math.ceil(t));
+      return `${String(Math.floor(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}`;
+    }
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function random() {
+        a |= 0;
+        a = a + 0x6d2b79f5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    function angleDelta(a, b) {
+      let d = (b - a + Math.PI) % TAU - Math.PI;
+      if (d < -Math.PI) d += TAU;
+      return d;
+    }
+    function pointSegmentDistance(px, py, ax, ay, bx, by) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      const l2 = dx * dx + dy * dy;
+      if (!l2) return Math.hypot(px - ax, py - ay);
+      const t = clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1);
+      return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+    }
+
+    function emptyScoreHistory() {
+      return { version: AphelionRules.SCORE_HISTORY_VERSION, runs: [] };
+    }
+
+    function unavailableScoreArchive(reason = "storage-unavailable") {
+      return { enabled: false, available: false, blocked: false, reason, history: emptyScoreHistory() };
+    }
+
+    function incompatibleScoreArchive() {
+      return { enabled: false, available: true, blocked: true, reason: "incompatible", history: emptyScoreHistory() };
+    }
+
+    function scoreArchiveSynchronizationSupported() {
+      return Boolean(navigator.locks && typeof navigator.locks.request === "function");
+    }
+
+    function initialScoreArchiveState() {
+      if (!scoreCookiesSupported()) return unavailableScoreArchive();
+      if (!scoreArchiveSynchronizationSupported()) return unavailableScoreArchive("synchronization-unavailable");
+      return loadScoreArchive();
+    }
+
+    function loadScoreArchive() {
+      const prefix = `${SCORE_COOKIE_NAME}=`;
+      let serializedCookies;
+      try {
+        serializedCookies = document.cookie;
+      } catch (_) {
+        return unavailableScoreArchive();
+      }
+      const cookie = serializedCookies
+        .split(";")
+        .map(part => part.trim())
+        .find(part => part.startsWith(prefix));
+      if (!cookie) return { enabled: false, available: true, blocked: false, reason: null, history: emptyScoreHistory() };
+      try {
+        const history = AphelionRules.parseStoredScoreHistory(decodeURIComponent(cookie.slice(prefix.length)));
+        return history
+          ? { enabled: true, available: true, blocked: false, reason: null, history }
+          : incompatibleScoreArchive();
+      } catch (_) {
+        return incompatibleScoreArchive();
+      }
+    }
+
+    function scoreCookieSuffix(maxAge) {
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      return `; Max-Age=${maxAge}; Path=/; SameSite=Strict${secure}`;
+    }
+
+    function scoreCookiesSupported() {
+      return ["http:", "https:"].includes(location.protocol) && navigator.cookieEnabled;
+    }
+
+    function requestScoreArchiveLock(callback) {
+      return navigator.locks.request(
+        SCORE_ARCHIVE_LOCK_NAME,
+        { mode: "exclusive" },
+        callback
+      );
+    }
+
+    function waitForScoreCookiePropagation() {
+      // Firefox can publish document.cookie changes to another renderer asynchronously.
+      // Keep the exclusive lock through that handoff so the next tab reads the committed value.
+      return new Promise(resolve => setTimeout(resolve, SCORE_COOKIE_PROPAGATION_MS));
+    }
+
+    async function writeScoreCookieInsideLock(history) {
+      if (!scoreCookiesSupported()) return null;
+      const serialized = AphelionRules.serializeScoreHistory(history);
+      try {
+        document.cookie = `${SCORE_COOKIE_NAME}=${encodeURIComponent(serialized)}${scoreCookieSuffix(SCORE_COOKIE_MAX_AGE)}`;
+      } catch (_) {
+        return null;
+      }
+      await waitForScoreCookiePropagation();
+      const saved = loadScoreArchive();
+      if (!saved.enabled || AphelionRules.serializeScoreHistory(saved.history) !== serialized) return null;
+      return saved;
+    }
+
+    function formatArchiveDate(completedAt) {
+      const date = new Date(completedAt);
+      if (!Number.isFinite(date.getTime())) return "Unknown date";
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+    }
+
+    function renderScoreArchive() {
+      if (!scoreArchiveState.enabled && !scoreArchiveState.preview) {
+        if (scoreArchiveState.blocked) {
+          showIncompatibleScoreArchive(false);
+          return;
+        }
+        if (scoreArchiveState.reason === "synchronization-unavailable") {
+          showSynchronizationUnavailable(false);
+          return;
+        }
+        if (scoreArchiveState.available === false || !scoreCookiesSupported()) {
+          showScoreDeclined(
+            "Cookies are unavailable in this direct-file or private context. No data was saved. Serve this folder at http://localhost to try the archive.",
+            "Unavailable / nothing saved",
+            false,
+            false
+          );
+          return;
+        }
+        showScoreConsent();
+        return;
+      }
+      const runs = scoreArchiveState.history.runs;
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = true;
+      scoreHistory.hidden = false;
+      reconsiderScoresButton.hidden = false;
+      removeBlockedScoreCookieButton.hidden = true;
+      scoreArchiveStatus.textContent = scoreArchiveState.preview
+        ? "Preview / unsaved"
+        : `On / ${runs.length} saved`;
+      scoreHistorySummary.textContent = scoreArchiveState.preview
+        ? `Debug preview: ${runs.length} ${runs.length === 1 ? "rite" : "rites"} shown; nothing is saved.`
+        : runs.length
+          ? `${runs.length} completed ${runs.length === 1 ? "rite" : "rites"} saved on this browser. Most recent first.`
+          : "No past rites saved yet. Your next completed rite will appear here.";
+
+      const fragment = document.createDocumentFragment();
+      for (const run of runs) {
+        const item = document.createElement("li");
+        item.className = "score-history-item";
+        item.setAttribute(
+          "aria-label",
+          `${run.won ? "Rite complete" : "Rite failed"}. Score ${run.score}. Best chain ${run.bestChain}. Time ${AphelionRules.formatTime(run.time)}. Completed ${new Date(run.completedAt).toLocaleString()}.`
+        );
+
+        const score = document.createElement("span");
+        const scoreValue = document.createElement("strong");
+        scoreValue.textContent = padScore(run.score);
+        score.append(scoreValue, " score");
+
+        const outcome = document.createElement("span");
+        outcome.className = run.won ? "is-win" : "";
+        outcome.textContent = run.won ? "Dawn" : "Totality";
+
+        const time = document.createElement("span");
+        time.textContent = AphelionRules.formatTime(run.time);
+
+        const date = document.createElement("span");
+        date.textContent = formatArchiveDate(run.completedAt);
+
+        item.title = `Best chain ×${run.bestChain}`;
+        item.append(score, outcome, time, date);
+        fragment.append(item);
+      }
+      scoreHistoryList.replaceChildren(fragment);
+    }
+
+    function showScoreConsent() {
+      scoreConsent.hidden = false;
+      scoreDeclined.hidden = true;
+      scoreHistory.hidden = true;
+      reconsiderScoresButton.hidden = false;
+      removeBlockedScoreCookieButton.hidden = true;
+      scoreArchiveStatus.textContent = "Optional / off";
+    }
+
+    function showIncompatibleScoreArchive(moveFocus) {
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = false;
+      scoreHistory.hidden = true;
+      scoreHistoryList.replaceChildren();
+      scoreDeclinedCopy.textContent = "A same-name score cookie exists, but its format or version is incompatible. Aphelian will not read, save, or replace it. Inspect it under Cookie details, remove it here, or use browser site-data settings.";
+      scoreArchiveStatus.textContent = "Blocked / incompatible cookie";
+      reconsiderScoresButton.hidden = true;
+      removeBlockedScoreCookieButton.hidden = false;
+      if (moveFocus) removeBlockedScoreCookieButton.focus({ preventScroll: true });
+    }
+
+    function showSynchronizationUnavailable(moveFocus) {
+      scoreArchiveState = unavailableScoreArchive("synchronization-unavailable");
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "Safe cross-tab synchronization is unavailable because this browser does not provide usable Web Locks. The archive is off, Aphelian will not create or change the score cookie, and any existing cookie can be removed in browser site-data settings.",
+        "Synchronization unavailable / archive off",
+        false,
+        false
+      );
+      if (moveFocus) focusScoreCookieDetails();
+    }
+
+    function showScoreDeclined(message, status = "Off / nothing saved", canReconsider = true, moveFocus = true) {
+      scoreConsent.hidden = true;
+      scoreDeclined.hidden = false;
+      scoreHistory.hidden = true;
+      scoreDeclinedCopy.textContent = message;
+      scoreArchiveStatus.textContent = status;
+      reconsiderScoresButton.hidden = !canReconsider;
+      removeBlockedScoreCookieButton.hidden = true;
+      if (moveFocus) {
+        if (canReconsider) reconsiderScoresButton.focus({ preventScroll: true });
+        else focusScoreCookieDetails();
+      }
+    }
+
+    function focusScoreCookieDetails() {
+      const summary = scoreCookieDetails.querySelector("summary");
+      summary.focus({ preventScroll: true });
+    }
+
+    function declineScoreArchive() {
+      scoreArchiveEnableAttempt += 1;
+      declineScoresButton.disabled = false;
+      showScoreDeclined("No cookie was created. Score saving is off for this visit.");
+      announcer.textContent = "Score saving remains off. No cookie was created.";
+    }
+
+    async function enableScoreArchive() {
+      const enableAttempt = ++scoreArchiveEnableAttempt;
+      if (scoreArchiveConsentRevoked) {
+        showScoreDeclined(
+          "Score saving was revoked for this visit, and the cookie could not be removed. Aphelian will not read, display, update, or renew it. Remove it in DevTools or browser site-data settings.",
+          "Delete failed / cookie remains",
+          false
+        );
+        announcer.textContent = "Score saving remains revoked. Remove the score cookie in DevTools.";
+        return false;
+      }
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(true);
+        announcer.textContent = "Safe score archive synchronization is unavailable. No cookie was created or changed.";
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          if (enableAttempt !== scoreArchiveEnableAttempt) return { kind: "cancelled" };
+          declineScoresButton.disabled = true;
+          const current = loadScoreArchive();
+          if (current.available === false) return { kind: "unavailable", state: current };
+          if (current.blocked) return { kind: "blocked", state: current };
+          if (current.enabled) return { kind: "enabled", state: current, existing: true };
+          const saved = await writeScoreCookieInsideLock(emptyScoreHistory());
+          return saved
+            ? { kind: "enabled", state: saved, existing: false }
+            : { kind: "write-failed" };
+        });
+      } catch (_) {
+        if (enableAttempt !== scoreArchiveEnableAttempt) return false;
+        declineScoresButton.disabled = false;
+        showSynchronizationUnavailable(true);
+        announcer.textContent = "The score archive lock could not be acquired. No cookie was created or changed.";
+        return false;
+      }
+      if (enableAttempt !== scoreArchiveEnableAttempt || result.kind === "cancelled") return false;
+      declineScoresButton.disabled = false;
+      if (scoreArchiveConsentRevoked) return false;
+      if (result.kind === "blocked") {
+        scoreArchiveState = result.state;
+        showIncompatibleScoreArchive(true);
+        announcer.textContent = "An incompatible score cookie was preserved. Inspect or remove it before enabling the archive.";
+        return false;
+      }
+      if (result.kind === "enabled") {
+        scoreArchiveState = result.state;
+        renderScoreArchive();
+        announcer.textContent = result.existing
+          ? "Score archive was already enabled in another tab. Its saved rites were preserved."
+          : "Score archive enabled. One first-party cookie was created.";
+        forgetScoresButton.focus({ preventScroll: true });
+        return true;
+      }
+      scoreArchiveState = result.state || unavailableScoreArchive("write-failed");
+      showScoreDeclined(
+        "The browser blocked the score cookie. The archive remains off and no data was saved. You can inspect cookie controls under Cookie details.",
+        "Unavailable / nothing saved",
+        false
+      );
+      announcer.textContent = "Score cookie unavailable. No data was saved.";
+      return false;
+    }
+
+    async function recordCompletedRun(won) {
+      if (scoreArchiveConsentRevoked || !scoreArchiveState.enabled) return;
+      const completedRun = {
+        score: game.score,
+        won,
+        bestChain: game.bestChain,
+        time: game.time,
+        completedAt: new Date().toISOString()
+      };
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(false);
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          if (scoreArchiveConsentRevoked) return { kind: "revoked" };
+          const current = loadScoreArchive();
+          if (!current.enabled) return { kind: "disabled", state: current };
+          const history = AphelionRules.appendScoreHistory(current.history, completedRun);
+          const saved = await writeScoreCookieInsideLock(history);
+          return saved ? { kind: "saved", state: saved } : { kind: "write-failed" };
+        });
+      } catch (_) {
+        if (scoreArchiveConsentRevoked) return;
+        showSynchronizationUnavailable(false);
+        return false;
+      }
+      if (scoreArchiveConsentRevoked || result.kind === "revoked") return;
+      if (result.kind === "saved") {
+        scoreArchiveState = result.state;
+        renderScoreArchive();
+        return true;
+      }
+      if (result.kind === "disabled") {
+        scoreArchiveState = result.state;
+        renderScoreArchive();
+        return result.state.available === false || result.state.blocked ? false : undefined;
+      }
+      scoreArchiveState = unavailableScoreArchive("write-failed");
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "This completed rite was not saved because the browser blocked the cookie update. The existing archive may remain; remove it in DevTools or browser site-data settings.",
+        "Save failed / archive off",
+        false,
+        false
+      );
+      return false;
+    }
+
+    async function forgetScoreArchive() {
+      scoreArchiveConsentRevoked = true;
+      scoreArchiveState = {
+        enabled: false,
+        available: true,
+        blocked: false,
+        reason: "revoked",
+        history: emptyScoreHistory()
+      };
+      scoreHistoryList.replaceChildren();
+      showScoreDeclined(
+        "Score saving is off. Aphelian is deleting the score cookie now.",
+        "Deleting / archive off",
+        false,
+        false
+      );
+      focusScoreCookieDetails();
+      if (!scoreArchiveSynchronizationSupported()) {
+        showSynchronizationUnavailable(false);
+        announcer.textContent = "The cookie was not changed because safe synchronization is unavailable. Remove it in browser site-data settings.";
+        return false;
+      }
+      let result;
+      try {
+        result = await requestScoreArchiveLock(async () => {
+          const current = loadScoreArchive();
+          if (current.available === false) return { kind: "unverified" };
+          if (!current.enabled && !current.blocked) return { kind: "deleted" };
+          try {
+            document.cookie = `${SCORE_COOKIE_NAME}=${scoreCookieSuffix(0)}`;
+          } catch (_) {
+            return { kind: "delete-failed" };
+          }
+          await waitForScoreCookiePropagation();
+          const remaining = loadScoreArchive();
+          if (remaining.available === false) return { kind: "unverified" };
+          return remaining.enabled || remaining.blocked
+            ? { kind: "delete-failed" }
+            : { kind: "deleted" };
+        });
+      } catch (_) {
+        result = { kind: "lock-failed" };
+      }
+      if (result.kind !== "deleted") {
+        const unverified = result.kind === "unverified" || result.kind === "lock-failed";
+        scoreArchiveState = unavailableScoreArchive(unverified ? "deletion-unverified" : "deletion-failed");
+        showScoreDeclined(
+          unverified
+            ? "Aphelian could not confirm deletion. Score saving remains off for this visit, and it will not read, display, update, or renew the cookie. Remove it in DevTools or browser site-data settings."
+            : "The browser did not delete the score cookie. Score saving remains off for this visit, and Aphelian will not read, display, update, or renew the cookie. Remove it in DevTools or browser site-data settings.",
+          unverified ? "Delete unverified / cookie may remain" : "Delete failed / cookie remains",
+          false,
+          false
+        );
+        announcer.textContent = unverified
+          ? "Cookie deletion could not be confirmed. Score saving is off; remove the score cookie in DevTools."
+          : "The browser did not delete the score cookie. Score saving is off; remove the cookie in DevTools.";
+        return false;
+      }
+      scoreArchiveConsentRevoked = false;
+      scoreArchiveState = { enabled: false, available: true, blocked: false, reason: null, history: emptyScoreHistory() };
+      scoreHistoryList.replaceChildren();
+      showScoreConsent();
+      announcer.textContent = "Saved scores deleted. Score saving is off.";
+      rememberScoresButton.focus({ preventScroll: true });
+      return true;
+    }
+
+    function resize() {
+      W = Math.max(320, innerWidth);
+      H = Math.max(320, innerHeight);
+      // The renderer starts at one backing pixel per CSS pixel and can step down
+      // slightly if a large/software-rendered display cannot sustain the frame rate.
+      DPR = renderScale;
+      canvas.width = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      baseOrbit = clamp(Math.min(W, H) * .158, 76, 128);
+      buildBackground();
+      grainPattern = ctx.createPattern(grainLayer, "repeat");
+      vignetteGradient = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .72);
+      vignetteGradient.addColorStop(0, "rgba(5,5,14,0)");
+      vignetteGradient.addColorStop(.7, "rgba(5,5,14,.08)");
+      vignetteGradient.addColorStop(1, "rgba(5,5,14,.66)");
+      if (game.player) {
+        game.player.x = clamp(game.player.x, 48, W - 48);
+        game.player.y = clamp(game.player.y, 58, H - 58);
+      }
+    }
+
+    function buildBackground() {
+      backgroundLayer.width = Math.max(1, Math.round(W * DPR));
+      backgroundLayer.height = Math.max(1, Math.round(H * DPR));
+      bctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      bctx.imageSmoothingEnabled = true;
+      const local = mulberry32((0x1977 ^ (W * 31) ^ (H * 17)) >>> 0);
+
+      bctx.fillStyle = COLORS.void;
+      bctx.fillRect(0, 0, W, H);
+
+      const wash = bctx.createRadialGradient(W * .78, H * .21, 0, W * .78, H * .21, Math.max(W, H) * .72);
+      wash.addColorStop(0, "rgba(29,24,245,.17)");
+      wash.addColorStop(.28, "rgba(17,21,74,.14)");
+      wash.addColorStop(1, "rgba(5,5,14,0)");
+      bctx.fillStyle = wash;
+      bctx.fillRect(0, 0, W, H);
+
+      // One impossible archival planet, treated as a printed plate.
+      const pr = clamp(Math.min(W, H) * .27, 108, 310);
+      const px = W * .83;
+      const py = H * .21;
+      bctx.save();
+      bctx.beginPath();
+      bctx.arc(px, py, pr, 0, TAU);
+      bctx.clip();
+      bctx.fillStyle = "#0a0c25";
+      bctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+      const spacing = clamp(pr / 28, 4.5, 8.5);
+      for (let y = py - pr; y <= py + pr; y += spacing) {
+        for (let x = px - pr; x <= px + pr; x += spacing) {
+          const nx = (x - px) / pr;
+          const ny = (y - py) / pr;
+          const d = nx * nx + ny * ny;
+          if (d > 1) continue;
+          const light = clamp(.72 - nx * .52 - d * .34 + (local() - .5) * .1, 0, 1);
+          const dot = spacing * (.08 + light * .34);
+          bctx.fillStyle = light > .48 ? "rgba(241,240,232,.19)" : "rgba(29,24,245,.24)";
+          bctx.beginPath();
+          bctx.arc(x + (Math.floor(y / spacing) % 2) * spacing * .5, y, dot, 0, TAU);
+          bctx.fill();
+        }
+      }
+      bctx.fillStyle = COLORS.void;
+      bctx.beginPath();
+      bctx.arc(px + pr * .34, py - pr * .05, pr * .91, 0, TAU);
+      bctx.fill();
+      bctx.restore();
+      bctx.strokeStyle = "rgba(241,240,232,.17)";
+      bctx.lineWidth = 1;
+      bctx.beginPath();
+      bctx.arc(px, py, pr, 0, TAU);
+      bctx.stroke();
+      bctx.strokeStyle = "rgba(29,24,245,.38)";
+      bctx.lineWidth = 3;
+      bctx.beginPath();
+      bctx.arc(px + 3, py + 2, pr + 1, -.92, 2.02);
+      bctx.stroke();
+
+      // Astronomical geometry and radial exposure marks.
+      bctx.save();
+      bctx.translate(W * .52, H * .58);
+      bctx.rotate(-.28);
+      for (let i = 0; i < 5; i++) {
+        bctx.strokeStyle = `rgba(85,82,255,${.035 + i * .012})`;
+        bctx.lineWidth = i === 2 ? 1.4 : .7;
+        bctx.beginPath();
+        bctx.ellipse(0, 0, Math.min(W, H) * (.25 + i * .09), Math.min(W, H) * (.09 + i * .04), 0, 0, TAU);
+        bctx.stroke();
+      }
+      bctx.restore();
+
+      const starCount = clamp(Math.floor(W * H / 7200), 90, 280);
+      for (let i = 0; i < starCount; i++) {
+        const x = local() * W;
+        const y = local() * H;
+        const s = local() < .87 ? local() * 1.15 + .25 : local() * 2 + 1;
+        bctx.globalAlpha = .16 + local() * .47;
+        bctx.fillStyle = local() < .82 ? COLORS.paper : COLORS.cobaltSoft;
+        if (local() < .2) bctx.fillRect(Math.round(x), Math.round(y), s * 2.5, .6);
+        else {
+          bctx.beginPath();
+          bctx.arc(x, y, s, 0, TAU);
+          bctx.fill();
+        }
+      }
+      bctx.globalAlpha = 1;
+
+      // Lunar phase index.
+      const phaseY = H * .82;
+      const phaseX = W * .075;
+      const phaseR = clamp(Math.min(W, H) * .009, 4, 10);
+      for (let i = 0; i < 7; i++) {
+        const x = phaseX + i * phaseR * 3.1;
+        bctx.strokeStyle = "rgba(241,240,232,.22)";
+        bctx.fillStyle = "rgba(241,240,232,.15)";
+        bctx.lineWidth = .7;
+        bctx.beginPath();
+        bctx.arc(x, phaseY, phaseR, 0, TAU);
+        bctx.fill();
+        bctx.stroke();
+        bctx.fillStyle = COLORS.void;
+        bctx.beginPath();
+        bctx.arc(x + lerp(-phaseR * .85, phaseR * .85, i / 6), phaseY, phaseR * .94, 0, TAU);
+        bctx.fill();
+      }
+
+      // Registration marks, scratches, and an offset-print frame.
+      bctx.strokeStyle = "rgba(241,240,232,.11)";
+      bctx.lineWidth = .6;
+      for (let i = 0; i < 22; i++) {
+        const y = local() * H;
+        const x = local() * W;
+        bctx.beginPath();
+        bctx.moveTo(x, y);
+        bctx.lineTo(Math.min(W, x + 24 + local() * 150), y + (local() - .5) * 2);
+        bctx.stroke();
+      }
+      bctx.strokeStyle = "rgba(29,24,245,.44)";
+      bctx.lineWidth = 1;
+      bctx.strokeRect(10.5, 10.5, W - 21, H - 21);
+      bctx.fillStyle = "rgba(29,24,245,.72)";
+      bctx.fillRect(10, 10, 5, H - 20);
+
+      grainLayer.width = 160;
+      grainLayer.height = 160;
+      const image = gctx.createImageData(160, 160);
+      for (let i = 0; i < image.data.length; i += 4) {
+        const n = local();
+        const bright = n > .48;
+        image.data[i] = bright ? 241 : 29;
+        image.data[i + 1] = bright ? 240 : 24;
+        image.data[i + 2] = bright ? 232 : 245;
+        image.data[i + 3] = n > .87 ? 34 : (n < .07 ? 19 : 0);
+      }
+      gctx.putImageData(image, 0, 0);
+    }
+
+    function createRunStats() {
+      return {
+        damageTaken: 0,
+        moved: false,
+        healed: false,
+        reversals: 0,
+        meteorsSpawned: 0,
+        meteorsDestroyed: 0
+      };
+    }
+
+    function createPlayer() {
+      const orbs = Array.from({ length: 3 }, (_, i) => ({
+        x: W / 2,
+        y: H / 2,
+        px: W / 2,
+        py: H / 2,
+        r: i === 1 ? 12 : 10,
+        trail: []
+      }));
+      return {
+        x: W / 2,
+        y: H * .57,
+        vx: 0,
+        vy: 0,
+        hp: 100,
+        vitalEchoes: [],
+        fuelTime: 0,
+        orbitBoostTime: 0,
+        focus: 100,
+        invuln: 0,
+        angle: -.2,
+        axis: -.35,
+        radius: baseOrbit,
+        radiusV: 0,
+        dir: 1,
+        folding: false,
+        charge: 0,
+        burst: 0,
+        burstDuration: .58,
+        burstCharge: 0,
+        retroCD: 0,
+        orbs
+      };
+    }
+
+    function resetGame() {
+      runNo += 1;
+      rng = mulberry32((0xa917e1 + runNo * 0x9e3779b9) >>> 0);
+      game.time = 0;
+      game.score = 0;
+      game.shownScore = 0;
+      game.enemies.length = 0;
+      game.particles.length = 0;
+      game.waves.length = 0;
+      game.pickups.length = 0;
+      game.floaters.length = 0;
+      game.player = createPlayer();
+      game.boss = null;
+      game.bossSpawned = false;
+      game.spawnTimer = .9;
+      game.cinderTimer = rr(8, 12);
+      game.chain = 0;
+      game.bestChain = 0;
+      game.chainTimer = 0;
+      game.kills = 0;
+      game.freeze = 0;
+      game.shake = 0;
+      game.flash = 0;
+      game.phase = 0;
+      game.victoryPending = 0;
+      game.endReason = "";
+      game.achievements = [];
+      game.runStats = createRunStats();
+      game.meteorWavesSpawned = new Set();
+      pointer.x = game.player.x + baseOrbit;
+      pointer.y = game.player.y - baseOrbit * .3;
+      showChapter("MOVEMENT I · THREE WARD MOONS", "CONTACT DAMAGES VOIDCRAFT", 3.1);
+    }
+
+    function startGame() {
+      shareAttempt += 1;
+      scoreSaveAttempt += 1;
+      resetShareFeedback();
+      initAudio();
+      resumeAudio();
+      resetGame();
+      game.mode = "playing";
+      accumulator = 0;
+      lowFpsTime = 0;
+      lastFrame = performance.now();
+      setOverlayHidden(true);
+      document.body.classList.add("is-playing");
+      setAudioActive(true);
+      announcer.textContent = "The rite begins. Three Ward Moons orbit you and damage Voidcraft on contact.";
+      canvas.focus({ preventScroll: true });
+    }
+
+    function pauseGame() {
+      if (game.mode !== "playing") return;
+      clearInputs(true);
+      game.mode = "paused";
+      setAudioActive(false);
+      showOverlay("pause");
+    }
+
+    function resumeGame() {
+      if (game.mode !== "paused") return;
+      initAudio();
+      resumeAudio();
+      game.mode = "playing";
+      lastFrame = performance.now();
+      accumulator = 0;
+      setOverlayHidden(true);
+      setAudioActive(true);
+      canvas.focus({ preventScroll: true });
+    }
+
+    function endGame(won, reason) {
+      if (game.mode !== "playing") return;
+      clearInputs(true);
+      game.mode = won ? "won" : "lost";
+      game.endReason = reason;
+      const scoreSaveResult = recordCompletedRun(won);
+      const currentScoreSaveAttempt = scoreSaveAttempt;
+      game.achievements = renderAchievements(won);
+      setAudioActive(false);
+      if (won) audioWin(); else audioLose();
+      showOverlay("result", won, reason);
+      const resultAnnouncement = won
+        ? `Rite complete. Score ${Math.floor(game.score)}.`
+        : `The rite failed. ${reason}. Score ${Math.floor(game.score)}.`;
+      announcer.textContent = resultAnnouncement;
+      return Promise.resolve(scoreSaveResult).then(result => {
+        if (currentScoreSaveAttempt !== scoreSaveAttempt) return result;
+        if (result === false) {
+          achievementCount.hidden = true;
+          scoreSaveNotice.hidden = false;
+          announcer.textContent = `${resultAnnouncement} The score was not saved because the archive cookie could not be updated.`;
+        }
+        return result;
+      }, error => {
+        console.error("Score archive update failed", error);
+        if (currentScoreSaveAttempt === scoreSaveAttempt) {
+          scoreArchiveState = unavailableScoreArchive("unexpected-error");
+          scoreHistoryList.replaceChildren();
+          showScoreDeclined(
+            "This completed rite was not saved because the score archive failed unexpectedly. The existing cookie may remain; remove it in DevTools or browser site-data settings.",
+            "Save failed / archive off",
+            false,
+            false
+          );
+          achievementCount.hidden = true;
+          scoreSaveNotice.hidden = false;
+          announcer.textContent = `${resultAnnouncement} The score was not saved because the archive failed unexpectedly.`;
+        }
+        return false;
+      });
+    }
+
+    function renderAchievements(won) {
+      const achievements = AphelionRules.evaluateAchievements({
+        won,
+        time: game.time,
+        damageTaken: game.runStats.damageTaken,
+        moved: game.runStats.moved,
+        health: game.player ? game.player.hp : 0,
+        healed: game.runStats.healed,
+        bestChain: game.bestChain,
+        score: game.score,
+        reversals: game.runStats.reversals
+      });
+      const fragment = document.createDocumentFragment();
+      for (const achievement of achievements) {
+        const item = document.createElement("li");
+        item.className = `achievement-item${achievement.unlocked ? " is-unlocked" : ""}`;
+        item.title = achievement.description;
+        item.setAttribute("aria-label", `${achievement.title}. ${achievement.difficulty}. ${achievement.unlocked ? "Earned" : "Not earned"}. ${achievement.description}`);
+
+        const mark = document.createElement("span");
+        mark.className = "achievement-mark";
+        mark.setAttribute("aria-hidden", "true");
+        mark.textContent = achievement.unlocked ? "◆" : "◇";
+
+        const title = document.createElement("span");
+        title.className = "achievement-title";
+        title.textContent = achievement.title;
+
+        const difficulty = document.createElement("span");
+        difficulty.className = "achievement-difficulty";
+        difficulty.textContent = achievement.difficulty;
+
+        item.append(mark, title, difficulty);
+        fragment.append(item);
+      }
+      achievementList.replaceChildren(fragment);
+      const unlockedCount = achievements.filter(achievement => achievement.unlocked).length;
+      achievementCount.textContent = `${unlockedCount} / ${achievements.length}`;
+      return achievements;
+    }
+
+    function shareRun() {
+      if (!["won", "lost"].includes(game.mode)) return;
+      const attempt = ++shareAttempt;
+      resetShareFeedback();
+      const text = AphelionRules.buildShareText({
+        score: game.score,
+        bestChain: game.bestChain,
+        time: game.time,
+        achievements: game.achievements
+      });
+      if (typeof navigator.share === "function") {
+        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text })
+          .then(() => showShareFeedback("Run shared", attempt))
+          .catch(error => {
+            if (error && error.name === "AbortError") return;
+            copyShareText(text, attempt);
+          });
+      } else {
+        copyShareText(text, attempt);
+      }
+    }
+
+    function copyShareText(text, attempt) {
+      if (attempt !== shareAttempt || !["won", "lost"].includes(game.mode)) return;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        navigator.clipboard.writeText(text)
+          .then(() => showShareFeedback("Run copied", attempt))
+          .catch(() => fallbackCopyShareText(text, attempt));
+        return;
+      }
+      fallbackCopyShareText(text, attempt);
+    }
+
+    function fallbackCopyShareText(text, attempt) {
+      if (attempt !== shareAttempt || !["won", "lost"].includes(game.mode)) return;
+      const field = document.createElement("textarea");
+      field.value = text;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.append(field);
+      field.select();
+      let copied = false;
+      try { copied = document.execCommand("copy"); }
+      catch (_) { /* prompt fallback below */ }
+      field.remove();
+      if (copied) showShareFeedback("Run copied", attempt);
+      else window.prompt("Copy your APHELIAN run:", text);
+    }
+
+    function showShareFeedback(message, attempt) {
+      if (attempt !== shareAttempt || !["won", "lost"].includes(game.mode)) return;
+      if (shareFeedbackTimer) window.clearTimeout(shareFeedbackTimer);
+      shareButton.textContent = message;
+      announcer.textContent = `${message}.`;
+      shareFeedbackTimer = window.setTimeout(() => {
+        if (attempt === shareAttempt && ["won", "lost"].includes(game.mode)) {
+          shareButton.textContent = "Share run";
+          announcer.textContent = "";
+        }
+        shareFeedbackTimer = 0;
+      }, 1700);
+    }
+
+    function resetShareFeedback() {
+      if (shareFeedbackTimer) window.clearTimeout(shareFeedbackTimer);
+      shareFeedbackTimer = 0;
+      shareButton.textContent = "Share run";
+      announcer.textContent = "";
+    }
+
+    function returnHome() {
+      if (!["won", "lost"].includes(game.mode)) return;
+      shareAttempt += 1;
+      scoreSaveAttempt += 1;
+      resetShareFeedback();
+      clearInputs(true);
+      game.mode = "title";
+      game.endReason = "";
+      setAudioActive(false);
+      showOverlay("title");
+      announcer.textContent = "Returned to the observatory.";
+    }
+
+    function setOverlayHidden(hidden) {
+      overlay.setAttribute("aria-hidden", String(hidden));
+      if (!hidden) riteButton.focus({ preventScroll: true });
+    }
+
+    function showOverlay(kind, won = false, reason = "") {
+      overlay.dataset.state = kind;
+      achievementCount.hidden = false;
+      scoreSaveNotice.hidden = true;
+      if (kind === "pause") {
+        eyebrow.textContent = "Combat field reference";
+        mainTitle.textContent = "STILLNESS";
+        subtitle.textContent = "The orrery is paused. Review its four instruments below.";
+        briefingCopy.textContent = "Read the field, then resume when ready.";
+        riteButton.textContent = "Resume the rite";
+      } else if (kind === "result") {
+        resetShareFeedback();
+        eyebrow.textContent = won ? "The black sun is sealed" : "The orrery has fallen";
+        mainTitle.textContent = won ? "DAWN" : "TOTALITY";
+        subtitle.textContent = won
+          ? "The void closes. Three Ward Moons return to their appointed paths."
+          : `${reason}. The stars remember the shape of your resistance.`;
+        briefingCopy.textContent = won ? "The rite is complete." : "Begin again before the afterimage fades.";
+        resultScore.textContent = padScore(game.score);
+        resultChain.textContent = `×${game.bestChain}`;
+        resultTime.textContent = formatTime(game.time);
+        riteButton.textContent = "Cast again";
+      } else {
+        eyebrow.textContent = "A rite in three movements";
+        mainTitle.textContent = "APHELIAN";
+        subtitle.textContent = "Command three Ward Moons around the last orrery. Break the approaching Voidcraft before totality.";
+        briefingCopy.textContent = "The three crescent Ward Moons are your weapons: contact damages Voidcraft. Hold, then release to drive them outward; any charged release strikes. At 36%, release an Aphelian Sweep: all three solid Lattice edges cut. Amber timing restores Focus.";
+        riteButton.textContent = "Begin the rite";
+      }
+      setOverlayHidden(false);
+      document.body.classList.toggle("is-playing", kind === "pause" || kind === "result");
+    }
+
+    function showChapter(kicker, title, duration = 2.4) {
+      game.chapter = { kicker, title, time: duration, duration };
+    }
+
+    function awardScore(points, guaranteed = false) {
+      const awarded = guaranteed || game.time < RITE_SCORE_WINDOW ? points : 0;
+      game.score += awarded;
+      return awarded;
+    }
+
+    function update(dt) {
+      const p = game.player;
+      if (!p) return;
+
+      if (game.victoryPending > 0) {
+        game.victoryPending -= dt;
+        updateFx(dt * .35);
+        p.angle += p.dir * dt * .8;
+        calculateOrbs(p);
+        if (game.victoryPending <= 0) endGame(true, "THE BLACK SUN IS SEALED");
+        return;
+      }
+
+      game.time += dt;
+      awardScore(dt * (8 + game.phase * 2));
+      game.chainTimer -= dt;
+      if (game.chainTimer <= 0) game.chain = 0;
+
+      const nextPhase = game.time >= BOSS_TIME ? 3 : Math.floor(game.time / 20);
+      if (nextPhase !== game.phase) {
+        game.phase = nextPhase;
+        if (game.phase === 1) {
+          showChapter("MOVEMENT II", "THE VEIL ADVANCES", 2.5);
+          announcer.textContent = "Movement two. The veil advances.";
+          audioChapter();
+        } else if (game.phase === 2) {
+          showChapter("MOVEMENT III", "RETROGRADE CHOIR", 2.5);
+          announcer.textContent = "Movement three. Retrograde choir.";
+          audioChapter();
+        } else if (game.phase === 3 && !game.bossSpawned) {
+          spawnBoss();
+        }
+      }
+
+      updatePlayer(p, dt);
+      updateSpawning(dt);
+
+      for (const enemy of game.enemies) updateEnemy(enemy, dt);
+      resolveCombat(dt);
+      if (game.mode !== "playing" || game.victoryPending > 0) return;
+      updatePickups(dt);
+      updateFx(dt);
+
+      game.enemies = game.enemies.filter(e => !e.dead && (e.boss || e.life > 0));
+      game.pickups = game.pickups.filter(pickup => pickup.life > 0);
+      game.particles = game.particles.filter(particle => particle.life > 0);
+      game.waves = game.waves.filter(wave => wave.life > 0);
+      game.floaters = game.floaters.filter(floater => floater.life > 0);
+
+      if (game.chapter) {
+        game.chapter.time -= dt;
+        if (game.chapter.time <= 0) game.chapter = null;
+      }
+      game.shownScore = damp(game.shownScore, game.score, 10, dt);
+      scheduleArpeggio();
+    }
+
+    function updatePlayer(p, dt) {
+      let ix = 0;
+      let iy = 0;
+      if (keys.has("KeyA") || keys.has("ArrowLeft")) ix -= 1;
+      if (keys.has("KeyD") || keys.has("ArrowRight")) ix += 1;
+      if (keys.has("KeyW") || keys.has("ArrowUp")) iy -= 1;
+      if (keys.has("KeyS") || keys.has("ArrowDown")) iy += 1;
+
+      if (touchMove.id !== null) {
+        const dx = touchMove.x - touchMove.ox;
+        const dy = touchMove.y - touchMove.oy;
+        const mag = Math.max(1, Math.hypot(dx, dy));
+        const strength = clamp(mag / 54, 0, 1);
+        ix += dx / mag * strength;
+        iy += dy / mag * strength;
+      }
+
+      const inputMag = Math.hypot(ix, iy);
+      if (inputMag > .01) game.runStats.moved = true;
+      if (inputMag > 1) { ix /= inputMag; iy /= inputMag; }
+      const movementBoost = p.fuelTime > 0 ? 1.5 : 1;
+      const acceleration = 990 * movementBoost;
+      p.vx += ix * acceleration * dt;
+      p.vy += iy * acceleration * dt;
+      const drag = Math.exp(-5.8 * dt);
+      p.vx *= drag;
+      p.vy *= drag;
+      const maxSpeed = AphelionRules.defaultPlayerMaxSpeed(W, H) * movementBoost;
+      const speed = Math.hypot(p.vx, p.vy);
+      if (speed > maxSpeed) {
+        p.vx = p.vx / speed * maxSpeed;
+        p.vy = p.vy / speed * maxSpeed;
+      }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+
+      const marginX = clamp(baseOrbit * .46, 38, 62);
+      const marginTop = clamp(baseOrbit * .52, 45, 72);
+      const marginBottom = clamp(baseOrbit * .65, 58, 88);
+      if (p.x < marginX) { p.x = marginX; p.vx *= -.25; }
+      if (p.x > W - marginX) { p.x = W - marginX; p.vx *= -.25; }
+      if (p.y < marginTop) { p.y = marginTop; p.vy *= -.25; }
+      if (p.y > H - marginBottom) { p.y = H - marginBottom; p.vy *= -.25; }
+      p.fuelTime = p.fuelTime <= dt + 1e-9 ? 0 : p.fuelTime - dt;
+      p.orbitBoostTime = p.orbitBoostTime <= dt + 1e-9 ? 0 : p.orbitBoostTime - dt;
+
+      const aimDx = pointer.x - p.x;
+      const aimDy = pointer.y - p.y;
+      if (aimDx * aimDx + aimDy * aimDy > 100) {
+        const targetAxis = Math.atan2(aimDy, aimDx);
+        p.axis += angleDelta(p.axis, targetAxis) * (1 - Math.exp(-9 * dt));
+      }
+
+      p.invuln = Math.max(0, p.invuln - dt);
+      updateVitalEchoes(p, dt);
+      p.retroCD = Math.max(0, p.retroCD - dt);
+      p.burst = Math.max(0, p.burst - dt);
+      if (!p.folding && p.burst <= 0 && foldSources.size > 0) {
+        beginFold(foldSources.values().next().value);
+      }
+
+      if (p.folding) {
+        p.focus = Math.max(0, p.focus - 32 * dt);
+        p.charge = Math.min(1.04, p.charge + .67 * dt);
+        if (p.focus <= .01 || p.charge >= 1.035) {
+          foldSources.clear();
+          castOrbit(true);
+        }
+      } else {
+        p.focus = Math.min(100, p.focus + (p.burst > 0 ? 24 : 42) * dt);
+      }
+
+      let targetRadius = baseOrbit;
+      if (p.folding) targetRadius = baseOrbit * (.46 - p.charge * .05);
+      else if (p.burst > 0) {
+        const life = p.burst / p.burstDuration;
+        targetRadius = baseOrbit + p.burstCharge * (86 + baseOrbit * .36) * easeOutCubic(life);
+      }
+      const spring = (targetRadius - p.radius) * 84;
+      p.radiusV += spring * dt;
+      p.radiusV *= Math.exp(-11.5 * dt);
+      p.radius += p.radiusV * dt;
+      p.radius = clamp(p.radius, baseOrbit * .37, baseOrbit * 2.15);
+
+      const meteorBoost = p.orbitBoostTime > 0 ? 1.3 : 0;
+      const angularSpeed = 2.02 + meteorBoost + (p.folding ? 1.45 + p.charge * 1.75 : 0) + (p.burst > 0 ? 1.1 : 0);
+      p.angle += p.dir * angularSpeed * dt;
+      calculateOrbs(p);
+    }
+
+    function calculateOrbs(p) {
+      const a = p.radius;
+      const b = p.radius * .64;
+      const ca = Math.cos(p.axis);
+      const sa = Math.sin(p.axis);
+      for (let i = 0; i < p.orbs.length; i++) {
+        const orb = p.orbs[i];
+        orb.px = orb.x;
+        orb.py = orb.y;
+        const theta = p.angle + i * TAU / p.orbs.length;
+        const lx = Math.cos(theta) * a;
+        const ly = Math.sin(theta) * b;
+        orb.x = p.x + lx * ca - ly * sa;
+        orb.y = p.y + lx * sa + ly * ca;
+        if (game.mode === "playing") {
+          orb.trail.push({ x: orb.x, y: orb.y, hot: p.burst > 0 ? 1 : (p.folding ? p.charge * .5 : 0) });
+          const maxTrail = reducedMotion ? 8 : (p.burst > 0 ? 34 : 21);
+          if (orb.trail.length > maxTrail) orb.trail.splice(0, orb.trail.length - maxTrail);
+        }
+      }
+    }
+
+    function beginFold(source) {
+      if (game.mode !== "playing" || !game.player) return;
+      foldSources.add(source);
+      const p = game.player;
+      if (p.focus < 2) return;
+      if (!p.folding && p.burst <= 0) {
+        p.folding = true;
+        p.charge = 0;
+        audioFold();
+        spawnWave(p.x, p.y, baseOrbit * .8, -55, .55, COLORS.cobaltSoft, 1.2);
+      }
+    }
+
+    function endFold(source) {
+      foldSources.delete(source);
+      if (foldSources.size === 0 && game.player && game.player.folding) castOrbit(false);
+    }
+
+    function castOrbit(forced) {
+      const p = game.player;
+      if (!p || !p.folding) return;
+      const charge = p.charge;
+      p.folding = false;
+      p.charge = 0;
+      if (charge < MIN_MOON_STRIKE_CHARGE) return;
+      p.burst = p.burstDuration;
+      p.burstCharge = charge;
+      p.radiusV += 120 + charge * 570;
+      const perfect = charge >= .72 && charge <= .96 && !forced;
+      if (perfect) {
+        p.focus = Math.min(100, p.focus + 21);
+        awardScore(175);
+        game.flash = Math.max(game.flash, .17);
+        game.floaters.push({ x: p.x, y: p.y - 34, text: "PERFECT APHELIAN / +21 FOCUS", color: COLORS.emberPale, life: 1.1, vy: -20 });
+      }
+      game.shake = Math.max(game.shake, reducedMotion ? 0 : 3 + charge * 7);
+      spawnWave(p.x, p.y, p.radius * .54, 390 + charge * 240, .65, perfect ? COLORS.emberPale : COLORS.paper, 2.1);
+      spawnInkBurst(p.x, p.y, perfect ? COLORS.ember : COLORS.cobaltSoft, Math.round(10 + charge * 18), 80 + charge * 150);
+      audioCast(charge, perfect);
+    }
+
+    function retrograde() {
+      const p = game.player;
+      if (game.mode !== "playing" || !p || p.retroCD > 0) return;
+      game.runStats.reversals += 1;
+      p.dir *= -1;
+      p.retroCD = 3.1;
+      p.angle -= p.dir * .18;
+      game.shake = Math.max(game.shake, reducedMotion ? 0 : 5);
+      for (const orb of p.orbs) {
+        spawnWave(orb.x, orb.y, 5, 145, .38, COLORS.ember, 1.5);
+        spawnInkBurst(orb.x, orb.y, COLORS.ember, 8, 105);
+      }
+      for (const enemy of game.enemies) {
+        if (enemy.dead) continue;
+        for (const orb of p.orbs) {
+          if (distSq(enemy.x, enemy.y, orb.x, orb.y) < Math.pow(enemy.r + 48, 2)) {
+            hitEnemy(enemy, enemy.boss ? .7 : 1.15, orb.x, orb.y, "retrograde");
+            break;
+          }
+        }
+      }
+      announcer.textContent = "Retrograde. Ward Moon rotation reversed.";
+      audioRetrograde();
+    }
+
+    function updateSpawning(dt) {
+      const meteorWave = AphelionRules.meteorWaveDue(game.time, game.meteorWavesSpawned);
+      if (meteorWave !== null) spawnMeteor(meteorWave);
+
+      game.cinderTimer -= dt;
+      if (game.cinderTimer <= 0) {
+        spawnEnemy("cinder");
+        game.cinderTimer = rr(8, 13);
+        return;
+      }
+
+      if (game.enemies.length > 44) return;
+      game.spawnTimer -= dt;
+      if (game.spawnTimer > 0) return;
+
+      const preBoss = game.time < BOSS_TIME;
+      const progress = clamp(game.time / BOSS_TIME, 0, 1);
+      const interval = preBoss ? lerp(1.08, .39, progress) : .72;
+      game.spawnTimer = interval * rr(.78, 1.28);
+
+      let type = "shard";
+      const roll = rng();
+      if (game.phase === 3 && roll < .28) type = "ram";
+      else if (game.phase >= 2 && roll < .25) type = "ram";
+      else if (game.phase >= 1 && roll < .55) type = "wisp";
+      spawnEnemy(type);
+      if (game.phase >= 2 && chance(.09) && game.enemies.length < 38) spawnEnemy("shard");
+    }
+
+    function edgeSpawn(pad = 45) {
+      const side = Math.floor(rng() * 4);
+      if (side === 0) return { x: rr(0, W), y: -pad };
+      if (side === 1) return { x: W + pad, y: rr(0, H) };
+      if (side === 2) return { x: rr(0, W), y: H + pad };
+      return { x: -pad, y: rr(0, H) };
+    }
+
+    function spawnMeteor(wave) {
+      if (game.meteorWavesSpawned.has(wave)) return null;
+      game.meteorWavesSpawned.add(wave);
+      const p = game.player;
+      const pad = 64;
+      const horizontal = chance(.5);
+      const fromNearEdge = chance(.5);
+      let x;
+      let y;
+      let targetX;
+      let targetY;
+
+      if (horizontal) {
+        x = fromNearEdge ? -pad : W + pad;
+        y = clamp(p.y + rr(-H * .32, H * .32), 42, H - 42);
+        targetX = fromNearEdge ? W + pad : -pad;
+        targetY = clamp(2 * p.y - y + rr(-baseOrbit * .45, baseOrbit * .45), 42, H - 42);
+      } else {
+        x = clamp(p.x + rr(-W * .32, W * .32), 42, W - 42);
+        y = fromNearEdge ? -pad : H + pad;
+        targetX = clamp(2 * p.x - x + rr(-baseOrbit * .45, baseOrbit * .45), 42, W - 42);
+        targetY = fromNearEdge ? H + pad : -pad;
+      }
+
+      const dx = targetX - x;
+      const dy = targetY - y;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const speed = AphelionRules.meteorTravelSpeed(W, H);
+      const meteor = {
+        type: "meteor",
+        x,
+        y,
+        vx: dx / distance * speed,
+        vy: dy / distance * speed,
+        r: clamp(baseOrbit * .17, 17, 22),
+        hp: 3,
+        maxHp: 3,
+        hitsRemaining: 3,
+        speed,
+        value: 0,
+        damage: 0,
+        life: distance / speed + 2.5,
+        age: 0,
+        phase: rr(0, TAU),
+        spin: rr(-1.2, 1.2),
+        angle: rr(0, TAU),
+        hitFlash: 0,
+        dead: false,
+        boss: false,
+        latticeCD: 0,
+        orbCD: [0, 0, 0],
+        state: "passing",
+        wave
+      };
+      game.enemies.push(meteor);
+      game.runStats.meteorsSpawned += 1;
+      showChapter(`WAVE ${wave + 1} · WAYFARING METEOR`, "THREE STRIKES / QUICKEN THE MOONS", 1.8);
+      announcer.textContent = `Wave ${wave + 1} meteor passing. Three Ward Moon strikes will quicken your orbit.`;
+      return meteor;
+    }
+
+    function spawnEnemy(type, x = null, y = null) {
+      const pos = x === null ? edgeSpawn(54) : { x, y };
+      const difficulty = 1 + clamp(game.time / DIFFICULTY_RAMP_TIME, 0, 1) * .55;
+      const defs = {
+        shard: { r: 10, hp: 1.05, speed: 66, value: 100, damage: 18 },
+        cinder: { r: 12, hp: 1.7, speed: 58, value: 240, damage: 16 },
+        wisp: { r: 15, hp: 2.15, speed: 48, value: 170, damage: 21 },
+        ram: { r: 17, hp: 3.8, speed: 42, value: 290, damage: 27 }
+      };
+      const d = defs[type];
+      const enemy = {
+        type,
+        x: pos.x,
+        y: pos.y,
+        vx: 0,
+        vy: 0,
+        r: d.r,
+        hp: d.hp,
+        maxHp: d.hp,
+        speed: d.speed * difficulty,
+        value: d.value,
+        damage: d.damage,
+        life: 24,
+        age: 0,
+        phase: rr(0, TAU),
+        spin: rr(-2.2, 2.2),
+        angle: rr(0, TAU),
+        hitFlash: 0,
+        dead: false,
+        boss: false,
+        latticeCD: 0,
+        orbCD: [0, 0, 0],
+        state: "hunt",
+        stateTimer: type === "ram" ? rr(.8, 1.8) : 0,
+        lockX: 0,
+        lockY: 0
+      };
+      game.enemies.push(enemy);
+      return enemy;
+    }
+
+    function spawnBoss() {
+      if (game.bossSpawned) return;
+      game.bossSpawned = true;
+      const pos = edgeSpawn(88);
+      const boss = {
+        type: "boss",
+        x: pos.x,
+        y: pos.y,
+        vx: 0,
+        vy: 0,
+        r: clamp(baseOrbit * .42, 42, 58),
+        hp: 44,
+        maxHp: 44,
+        speed: 82,
+        value: 5000,
+        damage: 31,
+        life: 99,
+        age: 0,
+        phase: 0,
+        spin: .32,
+        angle: 0,
+        hitFlash: 0,
+        dead: false,
+        boss: true,
+        latticeCD: 0,
+        orbCD: [0, 0, 0],
+        state: "arrival",
+        stateTimer: 1.6,
+        attackTimer: 2.4,
+        summonTimer: 4.2,
+        lockX: 0,
+        lockY: 0
+      };
+      game.boss = boss;
+      game.enemies.push(boss);
+      showChapter("TOTALITY", "SEAL THE BLACK SUN", 3.1);
+      announcer.textContent = "Totality. Seal the black sun.";
+      game.flash = .28;
+      game.shake = reducedMotion ? 0 : 10;
+      spawnWave(W / 2, H / 2, 20, 520, 1.2, COLORS.ember, 2.4);
+      audioBoss();
+    }
+
+    function updateEnemy(e, dt) {
+      if (e.dead) return;
+      const p = game.player;
+      e.age += dt;
+      e.life -= dt;
+      e.hitFlash = Math.max(0, e.hitFlash - dt);
+      e.latticeCD = Math.max(0, e.latticeCD - dt);
+      for (let i = 0; i < 3; i++) e.orbCD[i] = Math.max(0, e.orbCD[i] - dt);
+      e.angle += e.spin * dt;
+
+      if (e.type === "meteor") {
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        return;
+      }
+
+      const dx = p.x - e.x;
+      const dy = p.y - e.y;
+      const distance = Math.max(1, Math.hypot(dx, dy));
+      const ux = dx / distance;
+      const uy = dy / distance;
+
+      if (e.type === "shard") {
+        const wobble = Math.sin(e.age * 4.1 + e.phase) * 18;
+        e.vx = damp(e.vx, ux * e.speed - uy * wobble, 2.8, dt);
+        e.vy = damp(e.vy, uy * e.speed + ux * wobble, 2.8, dt);
+      } else if (e.type === "cinder") {
+        const weave = Math.sin(e.age * 5.1 + e.phase) * 34;
+        e.vx = damp(e.vx, ux * e.speed - uy * weave, 3.4, dt);
+        e.vy = damp(e.vy, uy * e.speed + ux * weave, 3.4, dt);
+      } else if (e.type === "wisp") {
+        const weave = Math.sin(e.age * 3.2 + e.phase) * 62;
+        e.vx = damp(e.vx, ux * e.speed - uy * weave, 2.2, dt);
+        e.vy = damp(e.vy, uy * e.speed + ux * weave, 2.2, dt);
+      } else if (e.type === "ram") {
+        updateRam(e, dt, ux, uy, distance);
+      } else if (e.type === "boss") {
+        updateBoss(e, dt, ux, uy, distance);
+      }
+
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+    }
+
+    function updateRam(e, dt, ux, uy, distance) {
+      if (e.state === "hunt") {
+        e.vx = damp(e.vx, ux * e.speed, 3.2, dt);
+        e.vy = damp(e.vy, uy * e.speed, 3.2, dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0 && distance < 390 && distance > 100) {
+          e.state = "telegraph";
+          e.stateTimer = .78;
+          e.lockX = game.player.x;
+          e.lockY = game.player.y;
+        }
+      } else if (e.state === "telegraph") {
+        e.vx *= Math.exp(-8 * dt);
+        e.vy *= Math.exp(-8 * dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          const dx = e.lockX - e.x;
+          const dy = e.lockY - e.y;
+          const d = Math.max(1, Math.hypot(dx, dy));
+          e.vx = dx / d * 430;
+          e.vy = dy / d * 430;
+          e.state = "dash";
+          e.stateTimer = .48;
+          audioTelegraph(false);
+        }
+      } else if (e.state === "dash") {
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          e.state = "recover";
+          e.stateTimer = 1.15;
+        }
+      } else {
+        e.vx *= Math.exp(-3.5 * dt);
+        e.vy *= Math.exp(-3.5 * dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          e.state = "hunt";
+          e.stateTimer = rr(1.2, 2.25);
+        }
+      }
+    }
+
+    function updateBoss(e, dt, ux, uy, distance) {
+      e.attackTimer -= dt;
+      e.summonTimer -= dt;
+
+      if (e.state === "arrival") {
+        e.vx = damp(e.vx, ux * 140, 2.1, dt);
+        e.vy = damp(e.vy, uy * 140, 2.1, dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0 || distance < 300) e.state = "orbit";
+      } else if (e.state === "orbit") {
+        const radial = clamp((distance - 255) * .8, -100, 100);
+        const tangent = 66;
+        e.vx = damp(e.vx, ux * radial - uy * tangent, 2.4, dt);
+        e.vy = damp(e.vy, uy * radial + ux * tangent, 2.4, dt);
+        if (e.attackTimer <= 0) {
+          e.state = "telegraph";
+          e.stateTimer = 1.05;
+          e.lockX = game.player.x;
+          e.lockY = game.player.y;
+          audioTelegraph(true);
+        }
+      } else if (e.state === "telegraph") {
+        e.vx *= Math.exp(-8 * dt);
+        e.vy *= Math.exp(-8 * dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          const dx = e.lockX - e.x;
+          const dy = e.lockY - e.y;
+          const d = Math.max(1, Math.hypot(dx, dy));
+          e.vx = dx / d * 510;
+          e.vy = dy / d * 510;
+          e.state = "dash";
+          e.stateTimer = .56;
+          game.shake = Math.max(game.shake, reducedMotion ? 0 : 5);
+        }
+      } else if (e.state === "dash") {
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          e.state = "recover";
+          e.stateTimer = .85;
+        }
+      } else if (e.state === "recover") {
+        e.vx *= Math.exp(-3.2 * dt);
+        e.vy *= Math.exp(-3.2 * dt);
+        e.stateTimer -= dt;
+        if (e.stateTimer <= 0) {
+          e.state = "orbit";
+          e.attackTimer = rr(2.4, 3.7);
+        }
+      }
+
+      if (e.summonTimer <= 0 && e.state !== "arrival") {
+        e.summonTimer = rr(4.4, 6.0);
+        for (let i = -1; i <= 1; i++) {
+          const a = Math.atan2(game.player.y - e.y, game.player.x - e.x) + i * .64;
+          spawnEnemy(chance(.25) ? "wisp" : "shard", e.x + Math.cos(a) * (e.r + 18), e.y + Math.sin(a) * (e.r + 18));
+        }
+        spawnWave(e.x, e.y, e.r, 185, .72, COLORS.cobaltSoft, 1.4);
+      }
+    }
+
+    function resolveCombat(dt) {
+      const p = game.player;
+      const releaseLatticeActive = p.burst > 0 && p.burstCharge >= LATTICE_IGNITION;
+      const latticeActive = releaseLatticeActive || (p.folding && p.charge >= LATTICE_IGNITION);
+
+      for (const e of game.enemies) {
+        if (e.dead) continue;
+
+        for (let i = 0; i < p.orbs.length; i++) {
+          const orb = p.orbs[i];
+          if (e.orbCD[i] <= 0 && distSq(e.x, e.y, orb.x, orb.y) < Math.pow(e.r + orb.r + 2, 2)) {
+            const hot = p.burst > 0;
+            const strikeCharge = hot ? clamp(p.burstCharge, 0, 1) : 0;
+            const damage = hot ? 1.05 + strikeCharge * 2.65 : .82;
+            hitEnemy(e, damage, orb.x, orb.y, hot ? "aphelion" : "orbit");
+            e.orbCD[i] = hot ? lerp(.24, .1, strikeCharge) : .31;
+            const dx = e.x - p.x;
+            const dy = e.y - p.y;
+            const d = Math.max(1, Math.hypot(dx, dy));
+            const force = hot ? 65 + strikeCharge * 95 : 48;
+            if (e.type !== "meteor") {
+              e.vx += dx / d * force;
+              e.vy += dy / d * force;
+            }
+          }
+        }
+
+        if (!e.dead && latticeActive && e.latticeCD <= 0) {
+          for (let i = 0; i < p.orbs.length; i++) {
+            const a = p.orbs[i];
+            const b = p.orbs[(i + 1) % p.orbs.length];
+            if (pointSegmentDistance(e.x, e.y, a.x, a.y, b.x, b.y) < e.r + 3) {
+              const latticeCharge = releaseLatticeActive ? p.burstCharge : p.charge;
+              const damage = releaseLatticeActive ? .95 + latticeCharge * 1.15 : .42 + latticeCharge * .42;
+              hitEnemy(e, e.boss ? damage * .25 : damage, e.x, e.y, releaseLatticeActive ? "aphelion" : "lattice");
+              e.latticeCD = releaseLatticeActive ? .13 : .19;
+              break;
+            }
+          }
+        }
+
+        if (e.type !== "meteor" && !e.dead && p.invuln <= 0 && distSq(e.x, e.y, p.x, p.y) < Math.pow(e.r + 13, 2)) {
+          hurtPlayer(e.damage, e.x, e.y);
+          if (e.boss) {
+            const dx = e.x - p.x;
+            const dy = e.y - p.y;
+            const d = Math.max(1, Math.hypot(dx, dy));
+            e.vx += dx / d * 260;
+            e.vy += dy / d * 260;
+          } else {
+            e.dead = true;
+            if (e.type === "cinder") spawnPickup("fuel", e.x, e.y);
+            spawnInkBurst(e.x, e.y, COLORS.void, 10, 110);
+          }
+        }
+
+        if (game.mode !== "playing" || game.victoryPending > 0) break;
+      }
+    }
+
+    function hitEnemy(e, damage, x, y, source) {
+      if (e.dead) return;
+      if (e.type === "meteor") {
+        e.hitsRemaining = AphelionRules.applyMeteorHit(e.hitsRemaining);
+        e.hp = e.hitsRemaining;
+      } else {
+        e.hp -= damage;
+      }
+      e.hitFlash = .095;
+      const heavy = source === "aphelion" || source === "retrograde";
+      game.freeze = Math.max(game.freeze, reducedMotion ? 0 : (e.boss ? .016 : heavy ? .028 : .012));
+      game.shake = Math.max(game.shake, reducedMotion ? 0 : (e.boss ? 3 : heavy ? 4.5 : 2));
+      spawnInkBurst(x, y, heavy ? COLORS.emberPale : COLORS.paper, reducedMotion ? 3 : (heavy ? 8 : 5), heavy ? 115 : 72);
+      audioHit(heavy, e.boss);
+      if (e.hp <= 0) {
+        if (e.type === "meteor") shatterMeteor(e);
+        else killEnemy(e, source);
+      }
+    }
+
+    function shatterMeteor(e) {
+      if (e.dead) return;
+      e.dead = true;
+      const p = game.player;
+      p.orbitBoostTime = AphelionRules.METEOR_BOOST_DURATION;
+      game.runStats.meteorsDestroyed += 1;
+      game.flash = Math.max(game.flash, .14);
+      game.floaters.push({ x: e.x, y: e.y - e.r, text: "ORBIT QUICKENED / 5 SEC", color: COLORS.emberPale, life: 1.25, vy: -25 });
+      spawnInkBurst(e.x, e.y, COLORS.emberPale, reducedMotion ? 9 : 26, 175);
+      spawnWave(e.x, e.y, e.r * .5, 320, .72, COLORS.cobaltSoft, 2.2);
+      announcer.textContent = "Wayfaring meteor broken. Ward Moon orbit quickened for five seconds.";
+    }
+
+    function killEnemy(e, source) {
+      if (e.dead) return;
+      e.dead = true;
+      game.kills += 1;
+      game.chain = game.chainTimer > 0 ? Math.min(99, game.chain + 1) : 1;
+      game.chainTimer = 2.45;
+      game.bestChain = Math.max(game.bestChain, game.chain);
+      const style = source === "aphelion" ? 1.25 : source === "lattice" ? 1.15 : source === "retrograde" ? 1.2 : 1;
+      const points = Math.round(e.value * (1 + (game.chain - 1) * .16) * style);
+      const awarded = awardScore(points, e.boss);
+      if (awarded > 0) game.floaters.push({ x: e.x, y: e.y - e.r, text: `+${awarded}`, color: source === "aphelion" ? COLORS.emberPale : COLORS.paper, life: .9, vy: -32 });
+      spawnInkBurst(e.x, e.y, e.boss ? COLORS.ember : COLORS.cobaltSoft, reducedMotion ? 9 : (e.boss ? 68 : 18), e.boss ? 260 : 145);
+      spawnWave(e.x, e.y, e.r * .5, e.boss ? 500 : 230, e.boss ? 1.1 : .55, e.boss ? COLORS.emberPale : COLORS.paper, e.boss ? 3 : 1.5);
+      audioKill(e.boss, game.chain);
+
+      if (e.boss) {
+        awardScore(5000 + Math.round(Math.max(0, SPEED_BONUS_WINDOW - game.time) * 100), true);
+        game.victoryPending = 1.2;
+        game.flash = .45;
+        game.shake = reducedMotion ? 0 : 18;
+      } else {
+        if (e.type === "cinder") spawnPickup("fuel", e.x, e.y);
+        if (game.kills % 10 === 0 || chance(.035)) spawnPickup("star-seed", e.x, e.y);
+      }
+    }
+
+    function spawnPickup(type, x, y) {
+      const pickup = { type, x, y, vx: rr(-24, 24), vy: rr(-24, 24), life: 10, phase: rr(0, TAU) };
+      game.pickups.push(pickup);
+      return pickup;
+    }
+
+    function hurtPlayer(amount, x, y) {
+      const p = game.player;
+      if (p.invuln > 0 || game.victoryPending > 0) return;
+      const previousHp = p.hp;
+      p.hp = Math.max(0, p.hp - amount);
+      if (p.hp < previousHp) {
+        game.runStats.damageTaken += previousHp - p.hp;
+        p.vitalEchoes.push({
+          from: p.hp / 100,
+          to: previousHp / 100,
+          life: VITAL_ECHO_DURATION,
+          maxLife: VITAL_ECHO_DURATION
+        });
+      }
+      p.invuln = 1.12;
+      p.vx += (p.x - x) * 3.1;
+      p.vy += (p.y - y) * 3.1;
+      game.chain = 0;
+      game.chainTimer = 0;
+      game.freeze = reducedMotion ? 0 : .075;
+      game.shake = reducedMotion ? 0 : 13;
+      game.flash = .34;
+      spawnWave(p.x, p.y, 8, 360, .68, COLORS.ember, 2.2);
+      spawnInkBurst(p.x, p.y, COLORS.ember, reducedMotion ? 8 : 28, 210);
+      audioHurt();
+      announcer.textContent = `Vital light at ${Math.ceil(p.hp)} percent.`;
+      if (p.hp <= 0) endGame(false, "VITAL LIGHT EXTINGUISHED");
+    }
+
+    function updateVitalEchoes(p, dt) {
+      for (const echo of p.vitalEchoes) echo.life -= dt;
+      p.vitalEchoes = p.vitalEchoes.filter(echo => echo.life > 0);
+    }
+
+    function updatePickups(dt) {
+      const p = game.player;
+      for (const pickup of game.pickups) {
+        pickup.life -= dt;
+        pickup.phase += dt * 2.7;
+        const dx = p.x - pickup.x;
+        const dy = p.y - pickup.y;
+        const d = Math.max(1, Math.hypot(dx, dy));
+        if (d < 150) {
+          const pull = (1 - d / 150) * 540;
+          pickup.vx += dx / d * pull * dt;
+          pickup.vy += dy / d * pull * dt;
+        }
+        pickup.vx *= Math.exp(-1.8 * dt);
+        pickup.vy *= Math.exp(-1.8 * dt);
+        pickup.x += pickup.vx * dt;
+        pickup.y += pickup.vy * dt;
+        if (d < 22) {
+          pickup.life = 0;
+          awardScore(250);
+          if (pickup.type === "fuel") {
+            p.fuelTime = FUEL_BOOST_DURATION;
+            game.floaters.push({ x: p.x, y: p.y - 30, text: "ORRERY FUEL / SWIFT 2 SEC", color: COLORS.emberPale, life: 1, vy: -24 });
+            announcer.textContent = "Orrery Fuel gathered. Movement quickened for two seconds.";
+          } else {
+            const previousHp = p.hp;
+            p.hp = Math.min(100, p.hp + 12);
+            if (p.hp > previousHp) game.runStats.healed = true;
+            p.focus = Math.min(100, p.focus + 30);
+            game.floaters.push({ x: p.x, y: p.y - 30, text: "STAR SEED +", color: COLORS.emberPale, life: 1, vy: -24 });
+            spawnWave(p.x, p.y, 8, 190, .55, COLORS.emberPale, 1.5);
+          }
+          audioPickup();
+        }
+      }
+    }
+
+    function spawnInkBurst(x, y, color, count, speed) {
+      const budget = reducedMotion ? 260 : 720;
+      const actual = Math.min(count, Math.max(0, budget - game.particles.length));
+      for (let i = 0; i < actual; i++) {
+        const a = rr(0, TAU);
+        const s = speed * rr(.25, 1);
+        game.particles.push({
+          x, y, px: x, py: y,
+          vx: Math.cos(a) * s,
+          vy: Math.sin(a) * s,
+          life: rr(.28, .85),
+          maxLife: 1,
+          color,
+          size: rr(.7, 2.5),
+          drag: rr(2.2, 5.4)
+        });
+      }
+    }
+
+    function spawnWave(x, y, radius, speed, life, color, width) {
+      game.waves.push({ x, y, radius, speed, life, maxLife: life, color, width });
+    }
+
+    function updateFx(dt) {
+      for (const particle of game.particles) {
+        particle.px = particle.x;
+        particle.py = particle.y;
+        particle.vx *= Math.exp(-particle.drag * dt);
+        particle.vy *= Math.exp(-particle.drag * dt);
+        particle.vy += 12 * dt;
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.life -= dt;
+      }
+      for (const wave of game.waves) {
+        wave.radius += wave.speed * dt;
+        wave.life -= dt;
+      }
+      for (const floater of game.floaters) {
+        floater.y += floater.vy * dt;
+        floater.life -= dt;
+      }
+    }
+
+    function clearInputs(cancelFold) {
+      keys.clear();
+      foldSources.clear();
+      touchMove.id = null;
+      touchCast.id = null;
+      if (cancelFold && game.player) {
+        game.player.folding = false;
+        game.player.charge = 0;
+      }
+    }
+
+    // ---- Web Audio: all voices are synthesized after a user gesture. ----
+    const sound = {
+      ctx: null,
+      master: null,
+      ambient: null,
+      filter: null,
+      noise: null,
+      muted: false,
+      nextArp: 0,
+      arpIndex: 0,
+      drones: []
+    };
+
+    function initAudio() {
+      if (sound.ctx) return;
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) {
+        sound.muted = true;
+        updateSoundButton();
+        return;
+      }
+      let ac;
+      try { ac = new AudioCtor(); }
+      catch (_) {
+        sound.muted = true;
+        updateSoundButton();
+        return;
+      }
+      sound.ctx = ac;
+      const master = ac.createGain();
+      const compressor = ac.createDynamicsCompressor();
+      compressor.threshold.value = -16;
+      compressor.knee.value = 12;
+      compressor.ratio.value = 5;
+      compressor.attack.value = .004;
+      compressor.release.value = .22;
+      master.gain.value = sound.muted ? 0 : .62;
+      master.connect(compressor).connect(ac.destination);
+      sound.master = master;
+
+      const ambient = ac.createGain();
+      ambient.gain.value = .0001;
+      const filter = ac.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 310;
+      filter.Q.value = 1.2;
+      ambient.connect(filter).connect(master);
+      sound.ambient = ambient;
+      sound.filter = filter;
+
+      [55, 82.41, 110].forEach((frequency, i) => {
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = i === 0 ? "sine" : "triangle";
+        osc.frequency.value = frequency;
+        osc.detune.value = i === 2 ? -7 : i * 3;
+        gain.gain.value = i === 0 ? .7 : .17;
+        osc.connect(gain).connect(ambient);
+        osc.start();
+        sound.drones.push({ osc, gain });
+      });
+
+      const lfo = ac.createOscillator();
+      const lfoGain = ac.createGain();
+      lfo.frequency.value = .083;
+      lfoGain.gain.value = 115;
+      lfo.connect(lfoGain).connect(filter.frequency);
+      lfo.start();
+
+      const buffer = ac.createBuffer(1, Math.floor(ac.sampleRate * .7), ac.sampleRate);
+      const data = buffer.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1;
+        last = last * .91 + white * .09;
+        data[i] = last;
+      }
+      sound.noise = buffer;
+      sound.nextArp = ac.currentTime + .18;
+      updateSoundButton();
+    }
+
+    function resumeAudio() {
+      if (!sound.ctx || sound.ctx.state !== "suspended") return;
+      const attempt = sound.ctx.resume();
+      if (attempt && typeof attempt.catch === "function") attempt.catch(() => {});
+    }
+
+    function setAudioActive(active) {
+      if (!sound.ctx || !sound.ambient) return;
+      const now = sound.ctx.currentTime;
+      sound.ambient.gain.cancelScheduledValues(now);
+      sound.ambient.gain.setTargetAtTime(active ? .054 : .012, now, active ? .7 : .25);
+    }
+
+    function toggleSound() {
+      sound.muted = !sound.muted;
+      initAudio();
+      resumeAudio();
+      if (sound.master) {
+        const now = sound.ctx.currentTime;
+        sound.master.gain.cancelScheduledValues(now);
+        sound.master.gain.setTargetAtTime(sound.muted ? 0 : .62, now, .035);
+      }
+      updateSoundButton();
+    }
+
+    function updateSoundButton() {
+      soundButton.textContent = sound.muted ? "Sound / off" : "Sound / on";
+      soundButton.setAttribute("aria-pressed", String(!sound.muted));
+    }
+
+    function voice(freq, duration, type = "sine", volume = .05, delay = 0, endFreq = null, pan = 0) {
+      if (!sound.ctx || sound.muted) return;
+      const ac = sound.ctx;
+      const now = ac.currentTime + delay;
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      const panner = typeof ac.createStereoPanner === "function" ? ac.createStereoPanner() : null;
+      osc.type = type;
+      osc.frequency.setValueAtTime(Math.max(20, freq), now);
+      if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + .008);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+      if (panner) {
+        panner.pan.value = clamp(pan, -1, 1);
+        osc.connect(gain).connect(panner).connect(sound.master);
+      } else {
+        osc.connect(gain).connect(sound.master);
+      }
+      osc.start(now);
+      osc.stop(now + duration + .03);
+    }
+
+    function noiseVoice(duration, volume, filterFrequency, delay = 0) {
+      if (!sound.ctx || sound.muted || !sound.noise) return;
+      const ac = sound.ctx;
+      const now = ac.currentTime + delay;
+      const src = ac.createBufferSource();
+      const filter = ac.createBiquadFilter();
+      const gain = ac.createGain();
+      src.buffer = sound.noise;
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(filterFrequency, now);
+      filter.frequency.exponentialRampToValueAtTime(Math.max(90, filterFrequency * .34), now + duration);
+      filter.Q.value = 1.4;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+      src.connect(filter).connect(gain).connect(sound.master);
+      src.start(now, 0, duration);
+      src.stop(now + duration + .02);
+    }
+
+    function scheduleArpeggio() {
+      if (!sound.ctx || sound.muted || game.mode !== "playing") return;
+      const now = sound.ctx.currentTime;
+      if (now < sound.nextArp) return;
+      const scale = [0, 7, 12, 19, 14, 7, 10, 17];
+      const semitone = scale[sound.arpIndex++ % scale.length];
+      const root = game.phase >= 3 ? 98 : 110;
+      const f = root * Math.pow(2, semitone / 12);
+      voice(f, .72, "sine", .024, 0, f * .997, ((sound.arpIndex % 3) - 1) * .45);
+      voice(f * 2.01, .42, "triangle", .008, .018, f * 1.98);
+      sound.nextArp = now + (game.phase >= 3 ? .27 : .36);
+    }
+
+    function audioFold() {
+      voice(164.81, .44, "triangle", .035, 0, 110);
+      voice(329.63, .55, "sine", .018, .04, 220);
+    }
+    function audioCast(charge, perfect) {
+      const root = 116 + charge * 70;
+      voice(root, .38, "sawtooth", .05, 0, root * 2.6);
+      voice(root * 2, .75, "sine", .038, .018, root * 3.98);
+      noiseVoice(.3, .045 + charge * .03, 1500 + charge * 2100);
+      if (perfect) voice(880, 1.05, "sine", .05, .055, 1320);
+    }
+    function audioHit(heavy, boss) {
+      voice(boss ? 72 : 105, heavy ? .16 : .095, "square", boss ? .035 : .018, 0, 48);
+      if (heavy) noiseVoice(.075, .025, 2400);
+    }
+    function audioKill(boss, chain) {
+      if (boss) return;
+      const f = 330 * Math.pow(2, Math.min(chain, 8) / 24);
+      voice(f, .26, "triangle", .025, 0, f * 1.5);
+    }
+    function audioHurt() {
+      voice(92, .5, "sawtooth", .075, 0, 34);
+      noiseVoice(.42, .09, 520);
+    }
+    function audioRetrograde() {
+      voice(440, .4, "triangle", .038, 0, 185);
+      voice(660, .48, "sine", .025, .035, 247);
+      noiseVoice(.16, .025, 1800);
+    }
+    function audioPickup() {
+      voice(523.25, .5, "sine", .032, 0, 1046.5);
+      voice(783.99, .65, "triangle", .019, .05, 1174.6);
+    }
+    function audioTelegraph(boss) {
+      voice(boss ? 78 : 155, boss ? .72 : .34, "sawtooth", boss ? .042 : .018, 0, boss ? 48 : 98);
+    }
+    function audioChapter() {
+      voice(110, 1, "sine", .04, 0, 220);
+      voice(164.81, 1.2, "triangle", .025, .12, 329.63);
+    }
+    function audioBoss() {
+      voice(55, 1.8, "sawtooth", .08, 0, 27.5);
+      voice(110, 1.5, "sine", .045, .08, 52);
+      noiseVoice(1.1, .085, 820);
+    }
+    function audioWin() {
+      [220, 277.18, 329.63, 440, 554.37].forEach((f, i) => voice(f, 1.8 - i * .12, i % 2 ? "triangle" : "sine", .036, i * .11, f * 2));
+    }
+    function audioLose() {
+      voice(110, 1.7, "sawtooth", .06, 0, 27.5);
+      noiseVoice(1.2, .055, 440, .08);
+    }
+
+    // ---- Rendering ----
+    function draw(realDt) {
+      frameNo += 1;
+      if (!reducedMotion) ambientTime += Math.min(.05, realDt);
+      game.fps = damp(game.fps, 1 / Math.max(.001, realDt), 2.5, realDt);
+      game.shake *= Math.exp(-9 * realDt);
+      game.flash = Math.max(0, game.flash - realDt * 1.35);
+
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(backgroundLayer, 0, 0, W, H);
+      drawAmbientGeometry();
+
+      const shakeAmount = reducedMotion ? 0 : game.shake;
+      const sx = shakeAmount ? (Math.sin(frameNo * 5.71) + Math.sin(frameNo * 2.13)) * shakeAmount * .34 : 0;
+      const sy = shakeAmount ? (Math.cos(frameNo * 4.17) + Math.sin(frameNo * 3.03)) * shakeAmount * .3 : 0;
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      if (game.player && game.mode !== "title") {
+        drawWaves();
+        drawTelegraphs();
+        drawPickups();
+        drawOrbitalSystem(game.player);
+        drawEnemies();
+        drawParticles();
+        drawFloaters();
+      } else {
+        drawAttractMode();
+      }
+      ctx.restore();
+
+      if (game.player && game.mode === "playing") drawHUD();
+      drawGrainAndVignette();
+      if (game.flash > 0) {
+        ctx.fillStyle = `rgba(216,121,50,${game.flash * .34})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    function drawAmbientGeometry() {
+      ctx.save();
+      const cx = W * .5;
+      const cy = H * .52;
+      ctx.translate(cx, cy);
+      ctx.rotate(ambientTime * .006);
+      ctx.strokeStyle = "rgba(241,240,232,.026)";
+      ctx.lineWidth = .7;
+      for (let i = 0; i < 18; i++) {
+        const a = i * TAU / 18;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * Math.min(W, H) * .22, Math.sin(a) * Math.min(W, H) * .22);
+        ctx.lineTo(Math.cos(a) * Math.max(W, H) * .82, Math.sin(a) * Math.max(W, H) * .82);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawAttractMode() {
+      const narrow = W < 760;
+      const x = narrow ? W * .5 : W * .68;
+      const y = narrow ? H * .43 : H * .52;
+      const r = clamp(Math.min(W, H) * (narrow ? .18 : .235), 70, 190);
+      const axis = -.48;
+      const angle = ambientTime * .58;
+      const orbs = [];
+      const ca = Math.cos(axis);
+      const sa = Math.sin(axis);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(axis);
+      ctx.setLineDash([2, 9]);
+      ctx.strokeStyle = "rgba(241,240,232,.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r, r * .62, 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      for (let i = 0; i < 24; i++) {
+        const a = i * TAU / 24;
+        const tx = Math.cos(a) * r;
+        const ty = Math.sin(a) * r * .62;
+        ctx.strokeStyle = i % 3 === 0 ? "rgba(216,121,50,.48)" : "rgba(29,24,245,.42)";
+        ctx.beginPath();
+        ctx.moveTo(tx * .95, ty * .95);
+        ctx.lineTo(tx * 1.04, ty * 1.04);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      for (let i = 0; i < 3; i++) {
+        const a = angle + i * TAU / 3;
+        const lx = Math.cos(a) * r;
+        const ly = Math.sin(a) * r * .62;
+        orbs.push({ x: x + lx * ca - ly * sa, y: y + lx * sa + ly * ca, r: i === 1 ? 13 : 11 });
+      }
+      drawLattice(orbs, .66, false, true);
+      drawMage(x, y, 0, 0, 1.12, false);
+      orbs.forEach((orb, i) => drawOrb(orb, i, .35));
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(29,24,245,.25)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.32 + Math.sin(ambientTime) * 4, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawOrbitalSystem(p) {
+      // Trails sit below the geometry like long-exposure ink.
+      for (let i = 0; i < p.orbs.length; i++) {
+        const trail = p.orbs[i].trail;
+        if (trail.length < 2) continue;
+        ctx.save();
+        ctx.lineCap = "butt";
+        for (let j = 1; j < trail.length; j++) {
+          const alpha = (j / trail.length) * (.05 + trail[j].hot * .34);
+          ctx.strokeStyle = trail[j].hot > .55 ? `rgba(216,121,50,${alpha})` : `rgba(85,82,255,${alpha})`;
+          ctx.lineWidth = .7 + (j / trail.length) * (trail[j].hot > .5 ? 3.1 : 1.2);
+          ctx.beginPath();
+          ctx.moveTo(trail[j - 1].x, trail[j - 1].y);
+          ctx.lineTo(trail[j].x, trail[j].y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.axis);
+      ctx.setLineDash([2, 7]);
+      ctx.strokeStyle = `rgba(241,240,232,${p.folding ? .34 : .18})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.radius, p.radius * .64, 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const tickCount = 18;
+      for (let i = 0; i < tickCount; i++) {
+        const a = i * TAU / tickCount;
+        const ex = Math.cos(a) * p.radius;
+        const ey = Math.sin(a) * p.radius * .64;
+        const scale = i % 3 === 0 ? 1.07 : 1.035;
+        ctx.strokeStyle = i % 3 === 0 ? "rgba(216,121,50,.5)" : "rgba(85,82,255,.34)";
+        ctx.lineWidth = i % 3 === 0 ? 1.2 : .7;
+        ctx.beginPath();
+        ctx.moveTo(ex * .975, ey * .975);
+        ctx.lineTo(ex * scale, ey * scale);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      const foldingLatticeLive = p.folding && p.charge >= LATTICE_IGNITION;
+      const releaseLatticeLive = p.burst > 0 && p.burstCharge >= LATTICE_IGNITION;
+      const latticeStrength = p.folding
+        ? foldingLatticeLive
+          ? .58 + clamp((p.charge - LATTICE_IGNITION) / (.96 - LATTICE_IGNITION), 0, 1) * .42
+          : .08 + clamp(p.charge / LATTICE_IGNITION, 0, 1) * .1
+        : p.burst > 0
+          ? releaseLatticeLive
+            ? .72 + p.burstCharge * .28
+            : .08 + clamp(p.burstCharge / LATTICE_IGNITION, 0, 1) * .1
+          : .08;
+      drawLattice(p.orbs, latticeStrength, p.burst > 0, foldingLatticeLive || releaseLatticeLive);
+      drawMage(p.x, p.y, p.vx, p.vy, 1, p.invuln > 0);
+      p.orbs.forEach((orb, i) => drawOrb(orb, i, p.burst > 0 ? 1 : p.folding ? p.charge : .12));
+      drawFuelBar(p);
+      drawOrbitBoostBar(p);
+    }
+
+    function drawFuelBar(p) {
+      if (p.fuelTime <= 0 || game.mode !== "playing") return;
+      const width = 48;
+      const x = Math.round(p.x - width / 2);
+      const y = Math.round(clamp(p.y - 42, 12, H - 20));
+      const ratio = clamp(p.fuelTime / FUEL_BOOST_DURATION, 0, 1);
+      ctx.save();
+      ctx.font = "700 7px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = COLORS.emberPale;
+      ctx.fillText("FUEL", Math.round(p.x), y - 5);
+      ctx.fillStyle = "rgba(5,5,14,.88)";
+      ctx.fillRect(x - 1, y - 1, width + 2, 5);
+      ctx.fillStyle = "rgba(216,121,50,.24)";
+      ctx.fillRect(x, y, width, 3);
+      ctx.fillStyle = COLORS.ember;
+      ctx.fillRect(x, y, width * ratio, 3);
+      ctx.restore();
+    }
+
+    function drawOrbitBoostBar(p) {
+      if (p.orbitBoostTime <= 0 || game.mode !== "playing") return;
+      const width = 58;
+      const x = Math.round(p.x - width / 2);
+      const offset = p.fuelTime > 0 ? 57 : 42;
+      const y = Math.round(clamp(p.y - offset, 12, H - 20));
+      const ratio = clamp(p.orbitBoostTime / AphelionRules.METEOR_BOOST_DURATION, 0, 1);
+      ctx.save();
+      ctx.font = "700 7px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = COLORS.paper;
+      ctx.fillText("QUICKENED", Math.round(p.x), y - 5);
+      ctx.fillStyle = "rgba(5,5,14,.88)";
+      ctx.fillRect(x - 1, y - 1, width + 2, 5);
+      ctx.fillStyle = "rgba(29,24,245,.3)";
+      ctx.fillRect(x, y, width, 3);
+      ctx.fillStyle = COLORS.cobaltSoft;
+      ctx.fillRect(x, y, width * ratio, 3);
+      ctx.restore();
+    }
+
+    function drawLattice(orbs, strength, hot, live = false) {
+      if (strength <= .02) return;
+      ctx.save();
+      ctx.globalAlpha = clamp(strength, 0, 1);
+      ctx.lineJoin = "miter";
+      ctx.setLineDash(live ? [] : [2, 7]);
+      ctx.lineDashOffset = -ambientTime * 15;
+      ctx.strokeStyle = hot ? COLORS.ember : COLORS.cobalt;
+      ctx.lineWidth = hot ? 4 : 3;
+      ctx.beginPath();
+      ctx.moveTo(orbs[0].x + 3, orbs[0].y + 2);
+      for (let i = 1; i < orbs.length; i++) ctx.lineTo(orbs[i].x + 3, orbs[i].y + 2);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = hot ? 1.5 : .75;
+      ctx.beginPath();
+      ctx.moveTo(orbs[0].x, orbs[0].y);
+      for (let i = 1; i < orbs.length; i++) ctx.lineTo(orbs[i].x, orbs[i].y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    function drawMage(x, y, vx, vy, scale = 1, invulnerable = false) {
+      const tilt = clamp(vx / 700, -.18, .18);
+      const pulse = 1 + Math.sin(ambientTime * 3.1) * .025;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(tilt);
+      ctx.scale(scale * pulse, scale * pulse);
+      if (invulnerable && Math.floor(ambientTime * 18) % 2 === 0) ctx.globalAlpha = .28;
+
+      ctx.fillStyle = COLORS.cobalt;
+      ctx.beginPath();
+      ctx.moveTo(-16 + 4, 20 + 3);
+      ctx.lineTo(0 + 4, -14 + 3);
+      ctx.lineTo(17 + 4, 20 + 3);
+      ctx.lineTo(6 + 4, 15 + 3);
+      ctx.lineTo(0 + 4, 23 + 3);
+      ctx.lineTo(-7 + 4, 15 + 3);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = COLORS.void;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(-16, 20);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(17, 20);
+      ctx.lineTo(6, 15);
+      ctx.lineTo(0, 23);
+      ctx.lineTo(-7, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = COLORS.paper;
+      ctx.beginPath();
+      ctx.arc(0, -12, 6.2, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = COLORS.void;
+      ctx.beginPath();
+      ctx.arc(2.8, -13.2, 5.6, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = COLORS.emberPale;
+      ctx.fillRect(-1.2, -13, 2.4, 2.4);
+
+      ctx.strokeStyle = "rgba(241,240,232,.7)";
+      ctx.lineWidth = .7;
+      ctx.beginPath();
+      ctx.moveTo(-22, 2);
+      ctx.lineTo(-9, 2);
+      ctx.moveTo(9, 2);
+      ctx.lineTo(22, 2);
+      ctx.moveTo(0, -28);
+      ctx.lineTo(0, -20);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawOrb(orb, index, energy) {
+      const radius = orb.r + energy * 1.5;
+      ctx.save();
+      ctx.translate(orb.x, orb.y);
+      if (!reducedMotion && energy > .45) {
+        ctx.shadowColor = energy > .8 ? COLORS.ember : COLORS.cobaltSoft;
+        ctx.shadowBlur = 8 + energy * 8;
+      }
+      ctx.fillStyle = COLORS.cobalt;
+      ctx.beginPath();
+      ctx.arc(3, 2, radius + 1, 0, TAU);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1;
+      ctx.fillStyle = index === 2 && energy > .7 ? COLORS.ember : COLORS.paper;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = COLORS.void;
+      ctx.beginPath();
+      if (index === 0) ctx.arc(radius * .42, -radius * .08, radius * .92, 0, TAU);
+      else if (index === 1) ctx.arc(-radius * .62, 0, radius * .7, 0, TAU);
+      else ctx.arc(radius * .18, radius * .15, radius * .58, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = index === 2 ? "rgba(241,240,232,.7)" : "rgba(5,5,14,.48)";
+      for (let i = 0; i < 5; i++) {
+        const a = i * 2.39 + index;
+        const d = radius * (.2 + (i % 3) * .18);
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * d, Math.sin(a) * d, .65 + (i % 2) * .4, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawTelegraphs() {
+      for (const e of game.enemies) {
+        if (e.dead || e.state !== "telegraph") continue;
+        const boss = e.boss;
+        const duration = boss ? 1.05 : .78;
+        const t = clamp(1 - e.stateTimer / duration, 0, 1);
+        ctx.save();
+        ctx.setLineDash(boss ? [8, 7] : [4, 6]);
+        ctx.lineDashOffset = -ambientTime * (boss ? 32 : 22);
+        ctx.strokeStyle = boss ? `rgba(216,121,50,${.28 + t * .66})` : `rgba(241,240,232,${.18 + t * .56})`;
+        ctx.lineWidth = boss ? 2.2 : 1;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.lineTo(e.lockX, e.lockY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r + (1 - t) * (boss ? 70 : 35), 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawEnemies() {
+      for (const e of game.enemies) {
+        if (e.dead) continue;
+        if (e.type === "meteor") {
+          drawMeteor(e);
+          drawMeteorHits(e);
+        } else if (e.boss) drawBoss(e);
+        else {
+          drawEnemy(e);
+          drawEnemyHealth(e);
+        }
+      }
+    }
+
+    function drawMeteor(e) {
+      const heading = Math.atan2(e.vy, e.vx);
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(heading);
+      ctx.lineCap = "butt";
+      ctx.strokeStyle = "rgba(216,121,50,.38)";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(-e.r * .55, 0);
+      ctx.lineTo(-e.r * 3.9, Math.sin(e.age * 4.2) * 4);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(241,240,232,.62)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 7]);
+      ctx.lineDashOffset = -ambientTime * 19;
+      ctx.beginPath();
+      ctx.moveTo(-e.r * .5, -3);
+      ctx.lineTo(-e.r * 4.6, -3 + Math.sin(e.age * 3.1) * 3);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.rotate(e.angle - heading);
+
+      ctx.fillStyle = COLORS.cobalt;
+      meteorPath(ctx, e.r + 2, 4, 3);
+      ctx.fill();
+      ctx.fillStyle = e.hitFlash > 0 ? COLORS.emberPale : COLORS.void;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1.4;
+      meteorPath(ctx, e.r, 0, 0);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = COLORS.ember;
+      ctx.beginPath();
+      ctx.arc(-e.r * .18, -e.r * .12, e.r * .24, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = COLORS.emberPale;
+      ctx.lineWidth = .8;
+      ctx.stroke();
+
+      const fractures = 3 - e.hitsRemaining;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < fractures; i++) {
+        const a = -.65 + i * 1.2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * e.r * .18, Math.sin(a) * e.r * .18);
+        ctx.lineTo(Math.cos(a + .18) * e.r * .62, Math.sin(a + .18) * e.r * .62);
+        ctx.lineTo(Math.cos(a - .1) * e.r * .84, Math.sin(a - .1) * e.r * .84);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawMeteorHits(e) {
+      const radius = 3.2;
+      const gap = 4;
+      const totalWidth = radius * 6 + gap * 2;
+      const startX = e.x - totalWidth / 2 + radius;
+      const y = e.y - e.r - 10;
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = i < e.hitsRemaining ? COLORS.emberPale : "rgba(17,21,74,.72)";
+        ctx.strokeStyle = i < e.hitsRemaining ? COLORS.emberPale : "rgba(241,240,232,.38)";
+        ctx.lineWidth = .8;
+        diamondPath(ctx, radius, startX + i * (radius * 2 + gap), y);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function meteorPath(context, r, ox, oy) {
+      const radii = [1, .76, .9, .72, 1.04, .78, .93, .69, .88];
+      context.beginPath();
+      for (let i = 0; i < radii.length; i++) {
+        const a = i * TAU / radii.length;
+        const x = Math.cos(a) * r * radii[i] + ox;
+        const y = Math.sin(a) * r * radii[i] + oy;
+        if (i === 0) context.moveTo(x, y); else context.lineTo(x, y);
+      }
+      context.closePath();
+    }
+
+    function drawEnemyHealth(e) {
+      const width = clamp(e.r * 1.5, 16, 28);
+      const x = Math.round(e.x - width / 2);
+      const y = Math.round(e.y - e.r - 8);
+      const health = clamp(e.hp / e.maxHp, 0, 1);
+      ctx.save();
+      ctx.fillStyle = "rgba(5,5,14,.82)";
+      ctx.fillRect(x - 1, y - 1, width + 2, 4);
+      ctx.fillStyle = "rgba(241,240,232,.22)";
+      ctx.fillRect(x, y, width, 2);
+      ctx.fillStyle = COLORS.paper;
+      ctx.fillRect(x, y, width * health, 2);
+      ctx.restore();
+    }
+
+    function drawEnemy(e) {
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate((e.type === "ram" && e.state === "dash") || e.type === "cinder" ? Math.atan2(e.vy, e.vx) : e.angle);
+      const flash = e.hitFlash > 0;
+
+      if (e.type === "shard") {
+        ctx.fillStyle = COLORS.cobalt;
+        shardPath(ctx, e.r + 2, 4, 3);
+        ctx.fill();
+        ctx.fillStyle = flash ? COLORS.emberPale : COLORS.paper;
+        shardPath(ctx, e.r, 0, 0);
+        ctx.fill();
+        ctx.strokeStyle = COLORS.void;
+        ctx.lineWidth = 1.4;
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(-e.r * .5, i * 3);
+          ctx.lineTo(e.r * .55, i * 3 - 2);
+          ctx.stroke();
+        }
+      } else if (e.type === "cinder") {
+        ctx.fillStyle = COLORS.cobalt;
+        skiffPath(ctx, e.r + 2, 4, 3);
+        ctx.fill();
+        ctx.fillStyle = flash ? COLORS.emberPale : COLORS.void;
+        ctx.strokeStyle = COLORS.paper;
+        ctx.lineWidth = 1.2;
+        skiffPath(ctx, e.r, 0, 0);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = COLORS.ember;
+        ctx.fillRect(-3.5, -4, 7, 8);
+        ctx.strokeStyle = COLORS.emberPale;
+        ctx.lineWidth = .8;
+        ctx.strokeRect(-3.5, -4, 7, 8);
+        ctx.beginPath();
+        ctx.moveTo(-e.r * .45, -3);
+        ctx.lineTo(-e.r - 7, -3);
+        ctx.moveTo(-e.r * .45, 3);
+        ctx.lineTo(-e.r - 7, 3);
+        ctx.stroke();
+      } else if (e.type === "wisp") {
+        ctx.fillStyle = COLORS.cobalt;
+        ctx.beginPath();
+        ctx.arc(3, 2, e.r + 2, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = flash ? COLORS.emberPale : COLORS.paper;
+        ctx.beginPath();
+        ctx.arc(0, 0, e.r, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = COLORS.void;
+        ctx.beginPath();
+        ctx.arc(e.r * .46, -1, e.r * .88, 0, TAU);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(241,240,232,.55)";
+        ctx.lineWidth = .8;
+        ctx.beginPath();
+        ctx.arc(0, 0, e.r + 5 + Math.sin(e.age * 4) * 2, -.7, 2.4);
+        ctx.stroke();
+      } else {
+        const dash = e.state === "dash";
+        ctx.fillStyle = COLORS.cobalt;
+        diamondPath(ctx, e.r + 3, 4, 3);
+        ctx.fill();
+        ctx.fillStyle = flash ? COLORS.emberPale : (dash ? COLORS.ember : COLORS.void);
+        ctx.strokeStyle = COLORS.paper;
+        ctx.lineWidth = 1.5;
+        diamondPath(ctx, e.r, 0, 0);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = COLORS.paper;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, e.r * .55, e.r * .22, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = COLORS.void;
+        ctx.beginPath();
+        ctx.arc(0, 0, 2.8, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function shardPath(context, r, ox, oy) {
+      context.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const a = i * TAU / 8;
+        const radius = i % 2 === 0 ? r : r * .36;
+        const x = Math.cos(a) * radius + ox;
+        const y = Math.sin(a) * radius + oy;
+        if (i === 0) context.moveTo(x, y); else context.lineTo(x, y);
+      }
+      context.closePath();
+    }
+
+    function skiffPath(context, r, ox, oy) {
+      context.beginPath();
+      context.moveTo(r + ox, oy);
+      context.lineTo(-r * .58 + ox, -r * .52 + oy);
+      context.lineTo(-r * .28 + ox, oy);
+      context.lineTo(-r * .58 + ox, r * .52 + oy);
+      context.closePath();
+    }
+
+    function diamondPath(context, r, ox, oy) {
+      context.beginPath();
+      context.moveTo(r + ox, oy);
+      context.lineTo(ox, r * .62 + oy);
+      context.lineTo(-r + ox, oy);
+      context.lineTo(ox, -r * .62 + oy);
+      context.closePath();
+    }
+
+    function drawBoss(e) {
+      const pulse = 1 + Math.sin(e.age * 3.4) * .035;
+      const r = e.r * pulse;
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      ctx.rotate(e.angle * .26);
+
+      ctx.strokeStyle = "rgba(216,121,50,.34)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 7]);
+      ctx.lineDashOffset = -ambientTime * 18;
+      for (let ring = 1; ring <= 2; ring++) {
+        ctx.beginPath();
+        ctx.arc(0, 0, r + 13 * ring + Math.sin(e.age * 2 + ring) * 3, 0, TAU);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Offset cobalt registration silhouette.
+      ctx.fillStyle = COLORS.cobalt;
+      ctx.beginPath();
+      ctx.arc(5, 3, r + 3, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = e.hitFlash > 0 ? COLORS.emberPale : COLORS.void;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0, 0, r - 2, 0, TAU);
+      ctx.clip();
+      const spacing = 7;
+      for (let y = -r; y <= r; y += spacing) {
+        for (let x = -r; x <= r; x += spacing) {
+          if (x * x + y * y > r * r) continue;
+          const shade = clamp((x / r + 1) * .5 + Math.sin((y + e.age * 12) * .08) * .12, 0, 1);
+          ctx.fillStyle = shade > .55 ? "rgba(241,240,232,.34)" : "rgba(85,82,255,.45)";
+          ctx.beginPath();
+          ctx.arc(x + (Math.floor(y / spacing) % 2) * 3, y, .6 + shade * 1.45, 0, TAU);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      for (let i = 0; i < 12; i++) {
+        const a = i * TAU / 12 + e.age * .21;
+        const len = i % 3 === 0 ? 17 : 9;
+        ctx.strokeStyle = i % 3 === 0 ? COLORS.ember : "rgba(241,240,232,.45)";
+        ctx.lineWidth = i % 3 === 0 ? 2 : .8;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * (r + 6), Math.sin(a) * (r + 6));
+        ctx.lineTo(Math.cos(a) * (r + 6 + len), Math.sin(a) * (r + 6 + len));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawPickups() {
+      for (const pickup of game.pickups) {
+        const a = pickup.phase;
+        ctx.save();
+        ctx.translate(pickup.x, pickup.y);
+        ctx.rotate(a);
+        if (pickup.type === "fuel") {
+          ctx.fillStyle = COLORS.cobalt;
+          ctx.fillRect(-3, -6, 10, 16);
+          ctx.fillStyle = COLORS.void;
+          ctx.strokeStyle = COLORS.paper;
+          ctx.lineWidth = 1;
+          ctx.fillRect(-5, -8, 10, 16);
+          ctx.strokeRect(-5, -8, 10, 16);
+          ctx.fillStyle = COLORS.ember;
+          ctx.fillRect(-3, -5, 6, 10);
+          ctx.strokeStyle = COLORS.emberPale;
+          ctx.beginPath();
+          ctx.moveTo(-7, -8);
+          ctx.lineTo(7, -8);
+          ctx.moveTo(-7, 8);
+          ctx.lineTo(7, 8);
+          ctx.stroke();
+        } else {
+          ctx.strokeStyle = COLORS.emberPale;
+          ctx.fillStyle = COLORS.void;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let i = 0; i < 8; i++) {
+            const ang = i * TAU / 8;
+            const r = i % 2 ? 4 : 10;
+            const x = Math.cos(ang) * r;
+            const y = Math.sin(ang) * r;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.rotate(-a * 1.7);
+        ctx.strokeStyle = pickup.type === "fuel" ? "rgba(216,121,50,.82)" : "rgba(29,24,245,.8)";
+        ctx.beginPath();
+        ctx.arc(0, 0, 14 + Math.sin(a * 2) * 2, 0, TAU);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawParticles() {
+      ctx.save();
+      ctx.lineCap = "butt";
+      for (const particle of game.particles) {
+        const alpha = clamp(particle.life / .65, 0, 1);
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = particle.color;
+        ctx.lineWidth = particle.size;
+        ctx.beginPath();
+        ctx.moveTo(particle.px, particle.py);
+        ctx.lineTo(particle.x, particle.y);
+        ctx.stroke();
+        if (particle.size > 1.8) {
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(particle.x - .7, particle.y - .7, 1.4, 1.4);
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawWaves() {
+      ctx.save();
+      for (const wave of game.waves) {
+        ctx.globalAlpha = clamp(wave.life / wave.maxLife, 0, 1) * .75;
+        ctx.strokeStyle = wave.color;
+        ctx.lineWidth = wave.width;
+        ctx.setLineDash(wave.width > 2 ? [6, 8] : []);
+        ctx.lineDashOffset = -wave.radius * .14;
+        ctx.beginPath();
+        ctx.arc(wave.x, wave.y, Math.max(0, wave.radius), 0, TAU);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawFloaters() {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "700 10px 'Courier New', monospace";
+      for (const floater of game.floaters) {
+        ctx.globalAlpha = clamp(floater.life * 1.5, 0, 1);
+        ctx.fillStyle = floater.color;
+        ctx.fillText(floater.text, floater.x, floater.y);
+      }
+      ctx.restore();
+    }
+
+    function drawHUD() {
+      const p = game.player;
+      const pad = clamp(W * .025, 16, 36);
+      const compact = W < 640;
+      const top = compact ? 22 : 26;
+      ctx.save();
+      ctx.textBaseline = "top";
+
+      ctx.fillStyle = COLORS.muted;
+      ctx.font = `700 ${compact ? 8 : 9}px 'Courier New', monospace`;
+      ctx.letterSpacing = "1px";
+      ctx.fillText("SCORE / CELESTIAL INDEX", pad, top);
+      ctx.fillStyle = COLORS.paper;
+      ctx.font = `700 ${compact ? 24 : 34}px Baskerville, Georgia, serif`;
+      ctx.fillText(padScore(game.shownScore), pad, top + 12);
+      if (game.chain > 1) {
+        ctx.fillStyle = game.chain >= 6 ? COLORS.emberPale : COLORS.cobaltSoft;
+        ctx.font = `700 ${compact ? 9 : 11}px 'Courier New', monospace`;
+        ctx.fillText(`CHAIN ×${game.chain}`, pad, top + (compact ? 42 : 52));
+      }
+
+      ctx.textAlign = "right";
+      ctx.fillStyle = COLORS.muted;
+      ctx.font = `700 ${compact ? 8 : 9}px 'Courier New', monospace`;
+      ctx.fillText(game.phase < 3 ? "TOTALITY APPROACHES" : "RITE ELAPSED", W - pad, top);
+      ctx.fillStyle = game.phase < 3 ? COLORS.paper : COLORS.emberPale;
+      ctx.font = `700 ${compact ? 24 : 34}px Baskerville, Georgia, serif`;
+      const displayedTime = game.phase < 3 ? Math.max(0, BOSS_TIME - game.time) : game.time;
+      ctx.fillText(formatTime(displayedTime), W - pad, top + 12);
+
+      // Timeline and movement markers.
+      const lineW = compact ? W * .38 : Math.min(380, W * .34);
+      const lineX = (W - lineW) / 2;
+      const lineY = compact ? top + 58 : top + 15;
+      ctx.strokeStyle = "rgba(241,240,232,.25)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(lineX, lineY);
+      ctx.lineTo(lineX + lineW, lineY);
+      ctx.stroke();
+      for (let i = 0; i < 4; i++) {
+        const x = lineX + lineW * i / 3;
+        ctx.fillStyle = i <= game.phase ? (i === 3 ? COLORS.ember : COLORS.paper) : COLORS.ink;
+        ctx.strokeStyle = i === 3 ? COLORS.ember : "rgba(241,240,232,.5)";
+        ctx.beginPath();
+        ctx.arc(x, lineY, i === game.phase ? 4 : 2.5, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+      }
+      const progress = clamp(game.time / BOSS_TIME, 0, 1);
+      ctx.strokeStyle = game.phase === 3 ? COLORS.ember : COLORS.cobaltSoft;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(lineX, lineY);
+      ctx.lineTo(lineX + lineW * progress, lineY);
+      ctx.stroke();
+
+      if (game.boss && !game.boss.dead) {
+        const bw = Math.min(compact ? W * .6 : 430, W - pad * 2);
+        const bx = (W - bw) / 2;
+        const by = lineY + (compact ? 15 : 20);
+        ctx.textAlign = "center";
+        ctx.fillStyle = COLORS.muted;
+        ctx.font = `700 ${compact ? 7 : 9}px 'Courier New', monospace`;
+        ctx.fillText("THE BLACK SUN", W / 2, by);
+        ctx.fillStyle = "rgba(29,24,245,.28)";
+        ctx.fillRect(bx, by + 12, bw, 4);
+        ctx.fillStyle = COLORS.ember;
+        ctx.fillRect(bx, by + 12, bw * clamp(game.boss.hp / game.boss.maxHp, 0, 1), 4);
+      }
+
+      // Player Vital instrument.
+      const bottom = H - pad;
+      drawVitalDiamonds(p, pad, bottom, compact);
+
+      // Focus / charge instrument.
+      const narrowHud = W <= 420;
+      const focusW = narrowHud ? 92 : Math.min(compact ? W * .42 : 360, W - pad * 2 - (compact ? 160 : 300));
+      const fx = (W - focusW) / 2;
+      const fy = bottom - 13;
+      ctx.textAlign = "center";
+      ctx.fillStyle = COLORS.muted;
+      ctx.font = `700 ${compact ? 7 : 9}px 'Courier New', monospace`;
+      const focusLabel = narrowHud
+        ? p.burst > 0
+          ? p.burstCharge >= LATTICE_IGNITION
+            ? "APHELIAN / SWEEP"
+            : "STRIKE / FAINT"
+          : p.folding && p.charge >= LATTICE_IGNITION
+            ? "LATTICE / RELEASE"
+            : p.folding
+              ? "CHARGE / RELEASE"
+              : "FOCUS / HOLD>CAST"
+        : p.burst > 0
+          ? p.burstCharge >= LATTICE_IGNITION
+            ? "APHELIAN SWEEP / MOONS + EDGES HIT"
+            : "WARD MOON STRIKE / LATTICE NOT LIT"
+          : p.folding && p.charge >= LATTICE_IGNITION
+            ? "LATTICE LIVE / ALL THREE EDGES CUT"
+            : p.folding
+              ? "CHARGING MOONS / RELEASE TO STRIKE"
+              : "WARD MOONS / HOLD + RELEASE TO STRIKE";
+      ctx.fillText(focusLabel, W / 2, bottom - 34);
+      ctx.fillStyle = "rgba(29,24,245,.25)";
+      ctx.fillRect(fx, fy, focusW, 4);
+      ctx.fillStyle = COLORS.paper;
+      ctx.fillRect(fx, fy, focusW * p.focus / 100, 4);
+      ctx.fillStyle = COLORS.ember;
+      ctx.fillRect(fx + focusW * .72, fy - 3, focusW * .24, 10);
+      if (p.folding) {
+        const cx = fx + focusW * clamp(p.charge, 0, 1);
+        ctx.fillStyle = COLORS.void;
+        ctx.fillRect(cx - 2, fy - 5, 4, 14);
+        ctx.strokeStyle = COLORS.paper;
+        ctx.strokeRect(cx - 2.5, fy - 5.5, 5, 15);
+      }
+
+      if (!compact) {
+        ctx.textAlign = "right";
+        ctx.fillStyle = p.retroCD <= 0 ? COLORS.paper : COLORS.muted;
+        ctx.font = "700 9px 'Courier New', monospace";
+        ctx.fillText(p.retroCD <= 0 ? "RETROGRADE / RIGHT CLICK OR SHIFT" : `RETROGRADE / ${p.retroCD.toFixed(1)}s`, W - pad, bottom - 47);
+      }
+
+      if (game.chapter) drawChapterCard(game.chapter);
+      drawTouchControls();
+      ctx.restore();
+    }
+
+    function vitalLabel(p, compact) {
+      return `${compact ? "VITAL" : "VITAL LIGHT"} / ${Math.ceil(p.hp)}%`;
+    }
+
+    function drawVitalDiamonds(p, pad, bottom, compact) {
+      const radius = compact ? 6 : 7;
+      const gap = compact ? 6 : 8;
+      const y = bottom - 10;
+      const filled = AphelionRules.healthDiamondCount(p.hp);
+      let echoFilled = filled;
+      let echoAlpha = 0;
+      for (const echo of p.vitalEchoes) {
+        echoFilled = Math.max(echoFilled, AphelionRules.healthDiamondCount(echo.to * 100));
+        echoAlpha = Math.max(echoAlpha, clamp(echo.life / echo.maxLife, 0, 1));
+      }
+      ctx.textAlign = "left";
+      ctx.fillStyle = COLORS.muted;
+      ctx.font = `700 ${compact ? 7 : 9}px 'Courier New', monospace`;
+      ctx.fillText(vitalLabel(p, compact), pad, bottom - 34);
+      for (let i = 0; i < 5; i++) {
+        const x = pad + radius + i * (radius * 2 + gap);
+        ctx.fillStyle = i < filled
+          ? COLORS.paper
+          : i < echoFilled
+            ? `rgba(216,121,50,${.25 + echoAlpha * .65})`
+            : "rgba(17,21,74,.72)";
+        ctx.strokeStyle = i < filled ? COLORS.paper : "rgba(241,240,232,.48)";
+        ctx.lineWidth = i < filled ? 1.25 : .8;
+        diamondPath(ctx, radius, x, y);
+        ctx.fill();
+        ctx.stroke();
+        if (i < filled) {
+          ctx.strokeStyle = "rgba(29,24,245,.7)";
+          ctx.lineWidth = .7;
+          ctx.beginPath();
+          ctx.moveTo(x, y - radius * .62);
+          ctx.lineTo(x, y + radius * .62);
+          ctx.stroke();
+        }
+      }
+    }
+
+    function drawChapterCard(chapter) {
+      const elapsed = chapter.duration - chapter.time;
+      const intro = clamp(elapsed / .28, 0, 1);
+      const outro = clamp(chapter.time / .55, 0, 1);
+      const alpha = Math.min(intro, outro);
+      const y = H * .29;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = COLORS.emberPale;
+      ctx.font = "700 9px 'Courier New', monospace";
+      ctx.fillText(chapter.kicker, W / 2, y - 21);
+      ctx.fillStyle = COLORS.paper;
+      ctx.font = `700 ${clamp(W * .035, 24, 52)}px Baskerville, Georgia, serif`;
+      ctx.fillText(chapter.title, W / 2, y + 6);
+      const width = clamp(W * .23, 90, 260) * easeInOut(intro);
+      ctx.strokeStyle = COLORS.cobaltSoft;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(W / 2 - width, y + 38);
+      ctx.lineTo(W / 2 + width, y + 38);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawTouchControls() {
+      if (touchMove.id === null) return;
+      const dx = touchMove.x - touchMove.ox;
+      const dy = touchMove.y - touchMove.oy;
+      const d = Math.max(1, Math.hypot(dx, dy));
+      const r = Math.min(38, d);
+      ctx.save();
+      ctx.globalAlpha = .48;
+      ctx.strokeStyle = COLORS.paper;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(touchMove.ox, touchMove.oy, 42, 0, TAU);
+      ctx.stroke();
+      ctx.fillStyle = COLORS.cobalt;
+      ctx.beginPath();
+      ctx.arc(touchMove.ox + dx / d * r, touchMove.oy + dy / d * r, 15, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawGrainAndVignette() {
+      ctx.save();
+      const tick = reducedMotion ? 0 : Math.floor(ambientTime * 11);
+      const ox = -((tick * 37) % grainLayer.width);
+      const oy = -((tick * 61) % grainLayer.height);
+      ctx.globalAlpha = reducedMotion ? .34 : .48;
+      ctx.globalCompositeOperation = "screen";
+      if (grainPattern) {
+        ctx.translate(ox, oy);
+        ctx.fillStyle = grainPattern;
+        ctx.fillRect(-ox, -oy, W + grainLayer.width, H + grainLayer.height);
+        ctx.translate(-ox, -oy);
+      }
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = vignetteGradient || "rgba(5,5,14,.25)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    function frame(now) {
+      const realDt = clamp((now - lastFrame) / 1000, 0, .05);
+      lastFrame = now;
+      if (game.mode === "playing") {
+        if (game.freeze > 0) {
+          game.freeze -= realDt;
+        } else {
+          accumulator += realDt;
+          let loops = 0;
+          while (accumulator >= STEP && loops < 4) {
+            update(STEP);
+            accumulator -= STEP;
+            loops += 1;
+          }
+          if (loops === 4) accumulator = 0;
+        }
+      }
+      adjustRenderQuality(realDt);
+      draw(realDt || STEP);
+      requestAnimationFrame(frame);
+    }
+
+    function adjustRenderQuality(dt) {
+      if (game.mode !== "playing" || game.time < 1.5 || dt <= 0 || document.hidden) return;
+      if (game.fps < 57) lowFpsTime += dt;
+      else lowFpsTime = Math.max(0, lowFpsTime - dt * 2);
+      if (lowFpsTime < 1.5 || renderScale <= .55) return;
+      renderScale = Math.max(.55, renderScale - .12);
+      lowFpsTime = 0;
+      game.fps = 60;
+      resize();
+      lastFrame = performance.now();
+      accumulator = 0;
+    }
+
+    function eventPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * W / rect.width,
+        y: (event.clientY - rect.top) * H / rect.height
+      };
+    }
+
+    canvas.addEventListener("pointermove", event => {
+      const pos = eventPoint(event);
+      if (event.pointerType === "touch") {
+        if (event.pointerId === touchMove.id) {
+          touchMove.x = pos.x;
+          touchMove.y = pos.y;
+        }
+        if (event.pointerId === touchCast.id) {
+          pointer.x = pos.x;
+          pointer.y = pos.y;
+        }
+      } else {
+        pointer.x = pos.x;
+        pointer.y = pos.y;
+        pointer.active = true;
+      }
+    }, { passive: true });
+
+    canvas.addEventListener("pointerdown", event => {
+      if (game.mode !== "playing") return;
+      initAudio();
+      resumeAudio();
+      const pos = eventPoint(event);
+      pointer.x = pos.x;
+      pointer.y = pos.y;
+      try { canvas.setPointerCapture(event.pointerId); }
+      catch (_) { /* synthetic or already-released pointers need no capture */ }
+      if (event.pointerType === "touch") {
+        if (pos.x < W * .46 && touchMove.id === null) {
+          touchMove.id = event.pointerId;
+          touchMove.ox = touchMove.x = pos.x;
+          touchMove.oy = touchMove.y = pos.y;
+          touchMove.started = performance.now();
+        } else if (touchCast.id === null) {
+          touchCast.id = event.pointerId;
+          beginFold(`touch-${event.pointerId}`);
+        }
+      } else if (event.button === 0) {
+        beginFold("mouse");
+      } else if (event.button === 2) {
+        retrograde();
+      }
+      event.preventDefault();
+    });
+
+    function releasePointer(event) {
+      if (event.pointerId === touchMove.id) {
+        const wasTap = event.type === "pointerup"
+          && performance.now() - touchMove.started < 280
+          && Math.hypot(touchMove.x - touchMove.ox, touchMove.y - touchMove.oy) < 13;
+        touchMove.id = null;
+        if (wasTap) retrograde();
+      }
+      if (event.pointerId === touchCast.id) {
+        endFold(`touch-${event.pointerId}`);
+        touchCast.id = null;
+      }
+      if (event.pointerType !== "touch" && (event.button === 0 || event.type === "pointercancel")) endFold("mouse");
+    }
+
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+    canvas.addEventListener("contextmenu", event => event.preventDefault());
+
+    window.addEventListener("keydown", event => {
+      const code = event.code;
+      if (event.target instanceof HTMLElement && event.target.matches("button, summary") && (code === "Enter" || code === "Space")) return;
+      const handled = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space", "ShiftLeft", "ShiftRight", "KeyW", "KeyA", "KeyS", "KeyD", "KeyP", "Escape", "Enter", "KeyR", "KeyM"].includes(code);
+      if (handled) event.preventDefault();
+
+      if (code === "KeyM" && !event.repeat) {
+        toggleSound();
+        return;
+      }
+      if ((code === "KeyP" || code === "Escape") && !event.repeat) {
+        if (game.mode === "playing") pauseGame();
+        else if (game.mode === "paused") resumeGame();
+        return;
+      }
+      if ((code === "Enter" || code === "KeyR") && !event.repeat && ["title", "won", "lost"].includes(game.mode)) {
+        startGame();
+        return;
+      }
+      if (game.mode !== "playing") return;
+      keys.add(code);
+      if (code === "Space" && !event.repeat) beginFold("keyboard");
+      if ((code === "ShiftLeft" || code === "ShiftRight") && !event.repeat) retrograde();
+    });
+
+    window.addEventListener("keyup", event => {
+      keys.delete(event.code);
+      if (event.code === "Space") endFold("keyboard");
+    });
+
+    window.addEventListener("blur", () => {
+      if (game.mode === "playing") pauseGame();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && game.mode === "playing") pauseGame();
+    });
+
+    riteButton.addEventListener("click", () => {
+      if (game.mode === "paused") resumeGame();
+      else startGame();
+    });
+    homeButton.addEventListener("click", returnHome);
+    shareButton.addEventListener("click", shareRun);
+    rememberScoresButton.addEventListener("click", enableScoreArchive);
+    declineScoresButton.addEventListener("click", declineScoreArchive);
+    reconsiderScoresButton.addEventListener("click", () => {
+      showScoreConsent();
+      announcer.textContent = "Choose whether Aphelian may remember completed scores.";
+      rememberScoresButton.focus({ preventScroll: true });
+    });
+    forgetScoresButton.addEventListener("click", forgetScoreArchive);
+    removeBlockedScoreCookieButton.addEventListener("click", forgetScoreArchive);
+    soundButton.addEventListener("click", toggleSound);
+    window.addEventListener("resize", () => {
+      renderScale = 1;
+      lowFpsTime = 0;
+      resize();
+    }, { passive: true });
+    reducedMotionQuery.addEventListener?.("change", event => { reducedMotion = event.matches; });
+
+    // A read-only diagnostic snapshot is always available. Mutating verification
+    // hooks exist only when the file is opened with ?debug=1.
+    const debugApi = {
+      scoreArchive: () => ({
+        name: SCORE_COOKIE_NAME,
+        enabled: scoreArchiveState.enabled,
+        blocked: scoreArchiveState.blocked === true,
+        reason: scoreArchiveState.reason || null,
+        history: AphelionRules.parseScoreHistory(AphelionRules.serializeScoreHistory(scoreArchiveState.history))
+      }),
+      snapshot: () => ({
+        mode: game.mode,
+        time: Number(game.time.toFixed(2)),
+        score: Math.floor(game.score),
+        health: game.player ? Math.ceil(game.player.hp) : null,
+        healthDiamonds: game.player ? AphelionRules.healthDiamondCount(game.player.hp) : null,
+        focus: game.player ? Math.ceil(game.player.focus) : null,
+        position: game.player ? { x: Math.round(game.player.x), y: Math.round(game.player.y) } : null,
+        orbit: game.player ? {
+          folding: game.player.folding,
+          charge: Number(game.player.charge.toFixed(2)),
+          burst: Number(game.player.burst.toFixed(2)),
+          direction: game.player.dir,
+          meteorBoost: Number(game.player.orbitBoostTime.toFixed(2))
+        } : null,
+        enemies: game.enemies.filter(e => !e.dead).length,
+        meteors: game.enemies
+          .filter(e => !e.dead && e.type === "meteor")
+          .map(e => ({ wave: e.wave, hitsRemaining: e.hitsRemaining, x: Math.round(e.x), y: Math.round(e.y) })),
+        meteorWavesSpawned: [...game.meteorWavesSpawned],
+        runStats: { ...game.runStats },
+        achievements: game.achievements.map(({ id, difficulty, unlocked }) => ({ id, difficulty, unlocked })),
+        particles: game.particles.length,
+        boss: game.boss ? { hp: Number(Math.max(0, game.boss.hp).toFixed(1)), state: game.boss.state } : null,
+        fps: Math.round(game.fps),
+        viewport: { width: W, height: H, dpr: DPR }
+      })
+    };
+    if (new URLSearchParams(location.search).has("debug")) Object.assign(debugApi, {
+      setScoreHistory: history => {
+        scoreArchiveState = {
+          enabled: false,
+          preview: true,
+          history: AphelionRules.parseScoreHistory(AphelionRules.serializeScoreHistory(history))
+        };
+        renderScoreArchive();
+        return debugApi.scoreArchive();
+      },
+      start: startGame,
+      spawnMeteor: () => {
+        if (game.mode !== "playing") return null;
+        const wave = [0, 1, 2].find(candidate => !game.meteorWavesSpawned.has(candidate));
+        return wave === undefined ? null : spawnMeteor(wave);
+      },
+      strikeMeteor: () => {
+        if (game.mode !== "playing") return false;
+        const meteor = game.enemies.find(enemy => !enemy.dead && enemy.type === "meteor");
+        if (!meteor) return false;
+        hitEnemy(meteor, 1, meteor.x, meteor.y, "orbit");
+        return true;
+      },
+      forceBoss: () => {
+        if (game.mode === "playing" && !game.bossSpawned) {
+          game.time = BOSS_TIME;
+          game.phase = 3;
+          spawnBoss();
+        }
+      },
+      setElapsedTime: seconds => {
+        const elapsed = Number(seconds);
+        if (game.mode !== "playing" || !Number.isFinite(elapsed) || elapsed < game.time) return false;
+        game.time = elapsed;
+        return true;
+      },
+      setScore: score => {
+        const points = Number(score);
+        if (game.mode !== "playing" || !Number.isFinite(points) || points < 0) return false;
+        game.score = points;
+        game.shownScore = points;
+        return true;
+      },
+      finish: won => {
+        if (game.mode === "playing") {
+          return endGame(Boolean(won), won ? "THE BLACK SUN IS SEALED" : "VITAL LIGHT EXTINGUISHED");
+        }
+        return Promise.resolve();
+      },
+      defeatBoss: () => {
+        if (game.mode === "playing" && game.boss && !game.boss.dead) {
+          hitEnemy(game.boss, game.boss.hp + 1, game.boss.x, game.boss.y, "aphelion");
+        }
+      },
+      extinguish: () => {
+        if (game.mode === "playing" && game.player) hurtPlayer(1000, game.player.x + 100, game.player.y);
+      }
+    });
+    window.__ORRERY__ = Object.freeze(debugApi);
+
+    resize();
+    game.player = createPlayer();
+    calculateOrbs(game.player);
+    updateSoundButton();
+    renderScoreArchive();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
