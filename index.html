@@ -465,7 +465,8 @@
     .rite-button:focus-visible,
     .share-button:focus-visible,
     .home-button:focus-visible,
-    .sound-button:focus-visible {
+    .sound-button:focus-visible,
+    .pause-button:focus-visible {
       outline: 2px solid var(--ember);
       outline-offset: 4px;
     }
@@ -646,7 +647,7 @@
 
     .folio span:last-child { text-align: right; }
 
-    .sound-button {
+    .sound-button, .pause-button {
       position: fixed;
       z-index: 7;
       right: max(24px, env(safe-area-inset-right));
@@ -984,6 +985,19 @@
       .view-selector { margin-top: 0; }
       .view-options button { min-height: 24px; min-width: 52px; padding: 4px 12px; font-size: 10px; }
     }
+    #game, #stage3D {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pause-button {
+      right: max(16px, env(safe-area-inset-right));
+      bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px);
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    .pause-button[hidden] { display: none; }
   </style>
 </head>
 <body>
@@ -1094,6 +1108,7 @@
     </footer>
   </section>
 
+  <button id="pauseButton" class="pause-button" type="button" aria-label="Pause game" hidden>II / Pause</button>
   <button id="soundButton" class="sound-button" type="button" aria-pressed="true">Sound / on</button>
   <div id="announcer" class="sr-only" aria-live="polite"></div>
   <noscript>This game requires JavaScript.</noscript>
@@ -1837,6 +1852,7 @@ window.createOrrery3D = function createOrrery3D(canvas) {
     const riteButton = document.getElementById("riteButton");
     const homeButton = document.getElementById("homeButton");
     const shareButton = document.getElementById("shareButton");
+    const pauseButton = document.getElementById("pauseButton");
     const soundButton = document.getElementById("soundButton");
     const resultScore = document.getElementById("resultScore");
     const resultChain = document.getElementById("resultChain");
@@ -2819,6 +2835,7 @@ window.createOrrery3D = function createOrrery3D(canvas) {
 
     function setOverlayHidden(hidden) {
       overlay.setAttribute("aria-hidden", String(hidden));
+      pauseButton.hidden = !hidden;
       if (!hidden) riteButton.focus({ preventScroll: true });
     }
 
@@ -4774,7 +4791,7 @@ window.createOrrery3D = function createOrrery3D(canvas) {
         ctx.textAlign = "right";
         ctx.fillStyle = p.retroCD <= 0 ? COLORS.paper : COLORS.muted;
         ctx.font = "700 9px 'Courier New', monospace";
-        ctx.fillText(p.retroCD <= 0 ? "RETROGRADE / RIGHT CLICK OR SHIFT" : `RETROGRADE / ${p.retroCD.toFixed(1)}s`, W - pad, bottom - 47);
+        ctx.fillText(p.retroCD <= 0 ? "RETROGRADE / RIGHT CLICK OR SHIFT" : `RETROGRADE / ${p.retroCD.toFixed(1)}s`, W - pad, bottom - 100);
       }
 
       if (game.chapter) drawChapterCard(game.chapter);
@@ -5059,6 +5076,19 @@ window.createOrrery3D = function createOrrery3D(canvas) {
     forgetScoresButton.addEventListener("click", forgetScoreArchive);
     removeBlockedScoreCookieButton.addEventListener("click", forgetScoreArchive);
     soundButton.addEventListener("click", toggleSound);
+    pauseButton.addEventListener("click", pauseGame);
+    pauseButton.addEventListener("pointerdown", event => {
+      // A second/third finger must pause immediately, without a primary click.
+      if (event.pointerType !== "touch") return;
+      event.preventDefault();
+      pauseGame();
+    });
+    // Safari's long-press selection/callout is separate from Pointer Events.
+    // Cancel only playfield defaults; keep native menus/buttons/scrolling intact.
+    canvas.addEventListener("touchstart", event => {
+      if (game.mode === "playing") event.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener("selectstart", event => event.preventDefault());
     window.addEventListener("resize", () => {
       renderScale = 1;
       lowFpsTime = 0;

@@ -11,6 +11,37 @@ def replace(old, new):
     assert html.count(old) == 1, old[:100]
     html = html.replace(old, new, 1)
 
+# Preserve the public branding/share additions when rebuilding frozen upstream.
+replace('  <title>APHELIAN — The Last Orrery</title>', '''  <meta name="description" content="Command three Ward Moons. Seal the Black Sun in APHELIAN — The Last Orrery.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aphelian.dev/">
+  <meta property="og:site_name" content="Aphelian">
+  <meta property="og:title" content="APHELIAN — The Last Orrery">
+  <meta property="og:description" content="Command three Ward Moons. Seal the Black Sun.">
+  <meta property="og:image" content="https://aphelian.dev/social-preview.png">
+  <meta property="og:image:secure_url" content="https://aphelian.dev/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The Little Orrery emblem beside the title APHELIAN — The Last Orrery">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="APHELIAN — The Last Orrery">
+  <meta name="twitter:description" content="Command three Ward Moons. Seal the Black Sun.">
+  <meta name="twitter:image" content="https://aphelian.dev/social-preview.png">
+  <title>APHELIAN — The Last Orrery</title>''')
+replace('''      if (typeof navigator.share === "function") {
+        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text })''', r'''      const shareUrl = "https://aphelian.dev/";
+      const shareUrlText = shareUrl.replace(/\/$/, "");
+      const nativeText = text.endsWith(shareUrlText)
+        ? text.slice(0, -shareUrlText.length).trimEnd()
+        : text;
+      if (typeof navigator.share === "function") {
+        navigator.share({ title: "APHELIAN // THE LAST ORRERY", text: nativeText, url: shareUrl })''')
+
 # The local achievement catalog is authoritative for both Node and standalone play.
 rules_start = html.index('<script id="aphelionRulesSource">')
 rules_end = html.index('</script>', rules_start)
@@ -144,6 +175,45 @@ replace('  </style>', '''    .overlay[data-state="result"] .achievement-title { 
       .view-options button { min-height: 24px; min-width: 52px; padding: 4px 12px; font-size: 10px; }
     }
   </style>''')
+
+# Touch-accessible pause uses the existing state transition/input cleanup.
+replace('  <button id="soundButton"', '''  <button id="pauseButton" class="pause-button" type="button" aria-label="Pause game" hidden>II / Pause</button>
+  <button id="soundButton"''')
+replace('    const soundButton =', '    const pauseButton = document.getElementById("pauseButton");\n    const soundButton =')
+replace('      overlay.setAttribute("aria-hidden", String(hidden));', '''      overlay.setAttribute("aria-hidden", String(hidden));
+      pauseButton.hidden = !hidden;''')
+replace('    soundButton.addEventListener("click", toggleSound);', '''    soundButton.addEventListener("click", toggleSound);
+    pauseButton.addEventListener("click", pauseGame);
+    pauseButton.addEventListener("pointerdown", event => {
+      // A second/third finger must pause immediately, without a primary click.
+      if (event.pointerType !== "touch") return;
+      event.preventDefault();
+      pauseGame();
+    });
+    // Safari's long-press selection/callout is separate from Pointer Events.
+    // Cancel only playfield defaults; keep native menus/buttons/scrolling intact.
+    canvas.addEventListener("touchstart", event => {
+      if (game.mode === "playing") event.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener("selectstart", event => event.preventDefault());''')
+replace('    .sound-button {\n      position: fixed;', '    .sound-button, .pause-button {\n      position: fixed;')
+replace('    .sound-button:focus-visible {', '    .sound-button:focus-visible,\n    .pause-button:focus-visible {')
+replace('  </style>', '''    #game, #stage3D {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pause-button {
+      right: max(16px, env(safe-area-inset-right));
+      bottom: calc(max(14px, env(safe-area-inset-bottom)) + 52px);
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    .pause-button[hidden] { display: none; }
+  </style>''')
+# Reserve space above the two field buttons for the desktop reversal hint.
+replace('W - pad, bottom - 47);', 'W - pad, bottom - 100);')
 
 # Fit chapter text against the actual active Canvas font on narrow screens.
 replace('      ctx.fillText(chapter.title, W / 2, y + 6);', '''      const chapterWidth = ctx.measureText(chapter.title).width;
